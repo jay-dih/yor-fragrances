@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – YOR Fragrances</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="admin-page">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="admin-logo">YOR<br/><span>Admin</span></div>
+    <nav class="admin-nav">
+      <a href="#" class="admin-nav-item active" onclick="showAdminTab('dashboard', this)">📊 Dashboard</a>
+      <a href="#" class="admin-nav-item" onclick="showAdminTab('products', this)">🧴 Products</a>
+      <a href="#" class="admin-nav-item" onclick="showAdminTab('orders', this)">📦 Orders</a>
+      <a href="#" class="admin-nav-item" onclick="showAdminTab('users', this)">👥 Users</a>
+    </nav>
+    <a href="index.html" class="admin-back">← Back to Site</a>
+    <button class="admin-logout" onclick="logoutUser()">Logout</button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+
+    <!-- DASHBOARD TAB -->
+    <div class="admin-tab active" id="tab-dashboard">
+      <h2>Dashboard</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <p class="stat-label">Total Products</p>
+          <p class="stat-value" id="stat-products">0</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Total Orders</p>
+          <p class="stat-value" id="stat-orders">0</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Registered Users</p>
+          <p class="stat-value" id="stat-users">0</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Categories</p>
+          <p class="stat-value">4</p>
+        </div>
+      </div>
+
+      <div class="admin-section-title">Product Category Breakdown</div>
+      <div class="chart-wrap" id="categoryChart"></div>
+
+      <div class="admin-section-title">Top Products by Inquiries</div>
+      <div id="topProducts"></div>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div class="admin-tab" id="tab-products">
+      <div class="admin-tab-header">
+        <h2>Products</h2>
+        <button class="btn-primary" onclick="openProductModal()">+ Add Product</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="productsTable">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Featured</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div class="admin-tab" id="tab-orders">
+      <h2>Orders / Inquiries</h2>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div class="admin-tab" id="tab-users">
+      <h2>Registered Users</h2>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Registered</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- PRODUCT MODAL -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add Product</h3>
+        <button onclick="closeProductModal()">&#10005;</button>
+      </div>
+      <form onsubmit="saveProduct(event)" class="modal-form">
+        <input type="hidden" id="editProductId"/>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Product Name</label>
+            <input type="text" id="pName" required/>
+          </div>
+          <div class="form-field">
+            <label>Category</label>
+            <select id="pCategory">
+              <option value="women">Women's</option>
+              <option value="men">Men's</option>
+              <option value="unisex">Unisex</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Price (₱)</label>
+            <input type="number" id="pPrice" required/>
+          </div>
+          <div class="form-field">
+            <label>Stock</label>
+            <input type="number" id="pStock" required/>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Scent Description</label>
+          <textarea id="pDesc" rows="3"></textarea>
+        </div>
+        <div class="form-field">
+          <label>Image Path (e.g. assets/images/product1.jpg)</label>
+          <input type="text" id="pImage" placeholder="assets/images/product1.jpg"/>
+        </div>
+        <div class="form-field checkbox-field">
+          <input type="checkbox" id="pFeatured"/>
+          <label for="pFeatured">Mark as Featured / Best Seller</label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeProductModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

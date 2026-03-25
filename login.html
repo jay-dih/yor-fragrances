@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login – YOR Fragrances</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="auth-page">
+
+  <a href="index.html" class="auth-logo">YOR Fragrances</a>
+
+  <div class="auth-container">
+    <div class="auth-image">
+      <img src="assets/images/auth-bg.jpg" alt="YOR" onerror="this.parentElement.style.background='linear-gradient(135deg,#c8b89a,#e8ddd0)'"/>
+    </div>
+    <div class="auth-form-wrap">
+      <h1>Welcome Back</h1>
+      <p class="auth-sub">Sign in to your account</p>
+
+      <form class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-field">
+          <input type="text" id="loginUser" placeholder="Username or Email" required/>
+        </div>
+        <div class="form-field">
+          <input type="password" id="loginPass" placeholder="Password" required/>
+        </div>
+        <button type="submit" class="btn-primary btn-full">Sign In</button>
+      </form>
+
+      <p class="auth-redirect">Don't have an account? <a href="register.html">Register</a></p>
+      <p class="auth-redirect"><a href="index.html">← Continue as Guest</a></p>
+
+      <!-- Demo hint -->
+      <div class="demo-hint">
+        <p><strong>Demo Accounts:</strong></p>
+        <p>Admin: admin / admin123</p>
+        <p>User: user / user123</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

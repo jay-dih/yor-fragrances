@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YOR Fragrances</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav class="navbar" id="navbar">
+      <button class="nav-menu-btn" onclick="toggleMobileMenu()">&#9776;</button>
+      <div class="nav-search">
+        <input
+          type="text"
+          placeholder="Search fragrances..."
+          id="searchInput"
+          oninput="handleSearch(this.value)"
+          onfocus="showSearchDropdown()"
+          onblur="hideSearchDropdown()"
+        />
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+      <a href="index.html" class="nav-logo">YOR Fragrances</a>
+      <div class="nav-actions">
+        <a href="cart.html" class="nav-icon" title="Cart">
+          &#128722;
+          <span class="cart-count" id="cartCount">0</span>
+        </a>
+        <div class="nav-user-menu">
+          <span class="nav-icon" onclick="toggleUserMenu()" title="Account"
+            >&#128100;</span
+          >
+          <div class="user-dropdown" id="userDropdown">
+            <div id="userDropdownContent"></div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MOBILE MENU -->
+    <div class="mobile-menu" id="mobileMenu">
+      <button class="close-mobile" onclick="toggleMobileMenu()">
+        &#10005;
+      </button>
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-banner">
+        <img
+          src="assets/images/mid-banner.jpg"
+          alt="Hero Banner"
+          class="hero-img"
+          onerror="
+            this.style.background = '#c8b89a';
+            this.src = '';
+            this.alt = '';
+          "
+        />
+        <div class="hero-overlay">
+          <div class="hero-breadcrumb">Shop / Featured</div>
+          <h1 class="hero-title">Handcrafted<br /><em>Original Scents</em></h1>
+          <a href="shop.html" class="hero-cta">Explore Collection</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATEGORY TABS + PRODUCTS -->
+    <section class="shop-section" id="shop">
+      <div class="category-bar">
+        <div class="category-tabs">
+          <button class="cat-tab active" onclick="filterCategory('all', this)">
+            ALL PERFUMES
+          </button>
+          <button class="cat-tab" onclick="filterCategory('women', this)">
+            WOMEN'S
+          </button>
+          <button class="cat-tab" onclick="filterCategory('men', this)">
+            MEN'S
+          </button>
+          <button class="cat-tab" onclick="filterCategory('unisex', this)">
+            UNISEX
+          </button>
+        </div>
+        <button class="filter-btn" onclick="toggleFilterPanel()">
+          &#9776; Filters
+        </button>
+      </div>
+
+      <!-- FILTER PANEL -->
+      <div class="filter-panel" id="filterPanel">
+        <div class="filter-group">
+          <label>Price Range</label>
+          <select id="priceFilter" onchange="applyFilters()">
+            <option value="all">All Prices</option>
+            <option value="0-500">₱0 – ₱500</option>
+            <option value="500-1000">₱500 – ₱1,000</option>
+            <option value="1000-2000">₱1,000 – ₱2,000</option>
+            <option value="2000+">₱2,000+</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Sort By</label>
+          <select id="sortFilter" onchange="applyFilters()">
+            <option value="default">Default</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name-asc">Name: A–Z</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="products-grid" id="productsGrid"></div>
+    </section>
+
+    <!-- MID BANNER -->
+    <section class="mid-banner">
+      <img
+        src="assets/images/mid-banner.jpg"
+        alt="Collection"
+        class="mid-banner-img"
+        onerror="this.style.display = 'none'"
+      />
+    </section>
+
+    <!-- FEATURED / BEST SELLERS -->
+    <section class="featured-section">
+      <h2 class="section-title">Best Sellers</h2>
+      <div class="products-grid" id="featuredGrid"></div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="about-section" id="about">
+      <div class="about-content">
+        <div class="about-text">
+          <p class="about-label">Our Story</p>
+          <h2>Originally Made.<br /><em>Locally Crafted.</em></h2>
+          <p>
+            YOR Fragrances was born from a passion for creating unique,
+            handcrafted scents that tell a story. Every bottle is originally
+            formulated and crafted by our founder — no mass production, no
+            compromises.
+          </p>
+          <p>
+            Part of the growing Izza Snack family of small businesses, YOR
+            Fragrances brings the same dedication to quality and authenticity to
+            the world of perfumery.
+          </p>
+        </div>
+        <div class="about-image">
+          <img
+            src="assets/images/about.jpg"
+            alt="About YOR"
+            onerror="
+              this.style.background = '#e8ddd0';
+              this.style.height = '400px';
+              this.style.display = 'block';
+            "
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact-section" id="contact">
+      <h2 class="section-title">Get In Touch</h2>
+      <div class="contact-container">
+        <div class="contact-info">
+          <p>
+            Interested in our fragrances? Have a custom scent request? Reach out
+            and we'll get back to you.
+          </p>
+          <div class="contact-details">
+            <p>📍 Valenzuela City, Metro Manila</p>
+            <p>📱 Available via Facebook & Instagram</p>
+            <p>⏰ Mon–Sat, 9AM–7PM</p>
+          </div>
+        </div>
+        <form class="contact-form" onsubmit="submitContact(event)">
+          <input type="text" placeholder="Your Name" required />
+          <input type="text" placeholder="Phone / Email" required />
+          <textarea
+            placeholder="Your message or inquiry..."
+            rows="4"
+            required
+          ></textarea>
+          <button type="submit" class="btn-primary">Send Message</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-newsletter">
+        <p>Stay updated with new scents and offers</p>
+        <div class="newsletter-input">
+          <input type="email" placeholder="Enter email address..." />
+          <button onclick="subscribeNewsletter()">&#10148;</button>
+        </div>
+      </div>
+      <div class="footer-links">
+        <div>
+          <h4>Shop</h4>
+          <a href="shop.html">All Perfumes</a>
+          <a href="shop.html?cat=women">Women's</a>
+          <a href="shop.html?cat=men">Men's</a>
+          <a href="shop.html?cat=unisex">Unisex</a>
+        </div>
+        <div>
+          <h4>Info</h4>
+          <a href="#about">About Us</a>
+          <a href="#contact">Contact</a>
+          <a href="#">FAQ</a>
+        </div>
+        <div>
+          <h4>Account</h4>
+          <a href="login.html">Login</a>
+          <a href="register.html">Register</a>
+          <a href="cart.html">Cart</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 YOR Fragrances. All Rights Reserved.</p>
+        <a
+          href="#"
+          onclick="
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return false;
+          "
+          >Back to   Top</a
+        >
+      </div>
+      <div class="footer-brand">YOR</div>
+    </footer>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+      renderProducts("productsGrid", getProducts());
+      renderProducts(
+        "featuredGrid",
+        getProducts()
+          .filter((p) => p.featured)
+          .slice(0, 4),
+      );
+    </script>
+  </body>
+</html>

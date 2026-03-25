@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shop – YOR Fragrances</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <button class="nav-menu-btn" onclick="toggleMobileMenu()">&#9776;</button>
+    <div class="nav-search">
+      <input type="text" placeholder="Search fragrances..." id="searchInput" oninput="handleSearch(this.value)" onfocus="showSearchDropdown()" onblur="hideSearchDropdown()"/>
+      <div class="search-dropdown" id="searchDropdown"></div>
+    </div>
+    <a href="index.html" class="nav-logo">YOR Fragrances</a>
+    <div class="nav-actions">
+      <a href="cart.html" class="nav-icon" title="Cart">
+        &#128722;
+        <span class="cart-count" id="cartCount">0</span>
+      </a>
+      <div class="nav-user-menu">
+        <span class="nav-icon" onclick="toggleUserMenu()" title="Account">&#128100;</span>
+        <div class="user-dropdown" id="userDropdown">
+          <div id="userDropdownContent"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="close-mobile" onclick="toggleMobileMenu()">&#10005;</button>
+    <a href="index.html">Home</a>
+    <a href="shop.html">Shop</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#contact">Contact</a>
+  </div>
+
+  <section class="shop-hero">
+    <div class="shop-hero-content">
+      <p class="breadcrumb">Home / Shop</p>
+      <h1>Our Collection</h1>
+    </div>
+    <img src="assets/images/shop-banner.jpg" alt="Shop Banner" onerror="this.style.display='none'"/>
+  </section>
+
+  <section class="shop-section">
+    <div class="category-bar">
+      <div class="category-tabs">
+        <button class="cat-tab active" onclick="filterCategory('all', this)">ALL PERFUMES</button>
+        <button class="cat-tab" onclick="filterCategory('women', this)">WOMEN'S</button>
+        <button class="cat-tab" onclick="filterCategory('men', this)">MEN'S</button>
+        <button class="cat-tab" onclick="filterCategory('unisex', this)">UNISEX</button>
+      </div>
+      <button class="filter-btn" onclick="toggleFilterPanel()">&#9776; Filters</button>
+    </div>
+
+    <div class="filter-panel" id="filterPanel">
+      <div class="filter-group">
+        <label>Price Range</label>
+        <select id="priceFilter" onchange="applyFilters()">
+          <option value="all">All Prices</option>
+          <option value="0-500">₱0 – ₱500</option>
+          <option value="500-1000">₱500 – ₱1,000</option>
+          <option value="1000-2000">₱1,000 – ₱2,000</option>
+          <option value="2000+">₱2,000+</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Sort By</label>
+        <select id="sortFilter" onchange="applyFilters()">
+          <option value="default">Default</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="name-asc">Name: A–Z</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="products-grid" id="productsGrid"></div>
+    <div class="load-more-wrap">
+      <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">LOAD MORE</button>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-newsletter">
+      <p>Stay updated with new scents and offers</p>
+      <div class="newsletter-input">
+        <input type="email" placeholder="Enter email address..."/>
+        <button onclick="subscribeNewsletter()">&#10148;</button>
+      </div>
+    </div>
+    <div class="footer-links">
+      <div>
+        <h4>Shop</h4>
+        <a href="shop.html">All Perfumes</a>
+        <a href="shop.html?cat=women">Women's</a>
+        <a href="shop.html?cat=men">Men's</a>
+        <a href="shop.html?cat=unisex">Unisex</a>
+      </div>
+      <div>
+        <h4>Info</h4>
+        <a href="index.html#about">About Us</a>
+        <a href="index.html#contact">Contact</a>
+      </div>
+      <div>
+        <h4>Account</h4>
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+        <a href="cart.html">Cart</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 YOR Fragrances. All Rights Reserved.</p>
+      <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;">Back to Top</a>
+    </div>
+    <div class="footer-brand">YOR</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Check URL params for category
+    const urlParams = new URLSearchParams(window.location.search);
+    const catParam = urlParams.get('cat');
+    if (catParam) {
+      const tabs = document.querySelectorAll('.cat-tab');
+      tabs.forEach(t => {
+        t.classList.remove('active');
+        if (t.textContent.toLowerCase().includes(catParam)) t.classList.add('active');
+      });
+      renderProducts('productsGrid', getProducts(catParam));
+    } else {
+      renderProducts('productsGrid', getProducts());
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cart – YOR Fragrances</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <button class="nav-menu-btn" onclick="toggleMobileMenu()">&#9776;</button>
+    <div class="nav-search">
+      <input type="text" placeholder="Search fragrances..." id="searchInput" oninput="handleSearch(this.value)" onfocus="showSearchDropdown()" onblur="hideSearchDropdown()"/>
+      <div class="search-dropdown" id="searchDropdown"></div>
+    </div>
+    <a href="index.html" class="nav-logo">YOR Fragrances</a>
+    <div class="nav-actions">
+      <a href="cart.html" class="nav-icon" title="Cart">
+        &#128722;
+        <span class="cart-count" id="cartCount">0</span>
+      </a>
+      <div class="nav-user-menu">
+        <span class="nav-icon" onclick="toggleUserMenu()" title="Account">&#128100;</span>
+        <div class="user-dropdown" id="userDropdown">
+          <div id="userDropdownContent"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="cart-section">
+    <h1>Your Cart</h1>
+    <div class="cart-layout">
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-summary" id="cartSummary"></div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>renderCart();</script>
+</body>
+</html>
