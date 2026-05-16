@@ -202,9 +202,10 @@
           </div>
         </div>
         <form class="contact-form" onsubmit="submitContact(event)">
-          <input type="text" placeholder="Your Name" required />
-          <input type="text" placeholder="Phone / Email" required />
+          <input type="text" id="contactName" placeholder="Your Name" required />
+          <input type="text" id="contactInfo" placeholder="Phone / Email" required />
           <textarea
+            id="contactMessage"
             placeholder="Your message or inquiry..."
             rows="4"
             required

@@ -14,6 +14,7 @@ function showAdminTab(tab, btn) {
   if (tab === "orders") renderOrdersTable();
   if (tab === "users") renderUsersTable();
   if (tab === "dashboard") renderDashboard();
+  if (tab === "inquiries") renderInquiriesTable();
 }
 
 function renderDashboard() {
@@ -276,3 +277,27 @@ function saveAdminUser(e) {
 
 // ---- INIT ----
 renderDashboard();
+
+function renderInquiriesTable() {
+  const inquiries = getInquiries();
+  const tbody = document.getElementById("inquiriesTableBody");
+  if (!tbody) return;
+  
+  if (inquiries.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-light);">No inquiries yet.</td></tr>`;
+    return;
+  }
+  
+  tbody.innerHTML = inquiries
+    .map(
+      (iq) => `
+    <tr>
+      <td style="white-space:nowrap;">${iq.date}</td>
+      <td><strong>${iq.name}</strong></td>
+      <td>${iq.contact}</td>
+      <td style="max-width:300px; font-size:0.85rem;">${iq.message}</td>
+    </tr>
+  `
+    )
+    .join("");
+}

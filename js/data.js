@@ -210,6 +210,9 @@ function initData() {
   if (!localStorage.getItem("yor_orders")) {
     localStorage.setItem("yor_orders", JSON.stringify(DEFAULT_ORDERS));
   }
+  if (!localStorage.getItem("yor_inquiries")) {
+    localStorage.setItem("yor_inquiries", JSON.stringify([]));
+  }
 }
 
 function getProducts(category) {
@@ -253,6 +256,15 @@ function getCurrentUser() {
 function setCurrentUser(user) {
   if (user) localStorage.setItem("yor_current_user", JSON.stringify(user));
   else localStorage.removeItem("yor_current_user");
+}
+
+function getInquiries() {
+  initData();
+  return JSON.parse(localStorage.getItem("yor_inquiries") || "[]");
+}
+
+function saveInquiries(inquiries) {
+  localStorage.setItem("yor_inquiries", JSON.stringify(inquiries));
 }
 
 // ===== INIT =====

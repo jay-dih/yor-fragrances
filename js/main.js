@@ -250,7 +250,7 @@ function removeFromCart(productId) {
 function checkout() {
   const user = getCurrentUser();
   if (!user) {
-    if (confirm('Please log in to place an order. Go to login page?')) window.location.href = 'login.html';
+    openCheckoutAuthModal();
     return;
   }
   const cart = getCart();
@@ -280,6 +280,16 @@ function checkout() {
   updateCartCount();
   showToast('Order placed! We\'ll contact you to confirm.');
   setTimeout(() => renderCart(), 500);
+}
+
+function openCheckoutAuthModal() {
+  const modal = document.getElementById('checkoutAuthModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeCheckoutAuthModal() {
+  const modal = document.getElementById('checkoutAuthModal');
+  if (modal) modal.classList.remove('open');
 }
 
 // ---- SEARCH ----
@@ -423,6 +433,22 @@ function inquireProduct(name) {
 // ---- CONTACT FORM ----
 function submitContact(e) {
   e.preventDefault();
+  const name = document.getElementById("contactName")?.value.trim();
+  const info = document.getElementById("contactInfo")?.value.trim();
+  const message = document.getElementById("contactMessage")?.value.trim();
+  
+  if(name && info && message) {
+    const inquiries = getInquiries();
+    inquiries.push({
+      id: Date.now(),
+      name,
+      contact: info,
+      message,
+      date: new Date().toISOString().split("T")[0]
+    });
+    saveInquiries(inquiries);
+  }
+  
   showToast('Message sent! We\'ll get back to you shortly.');
   e.target.reset();
 }
