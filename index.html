@@ -58,9 +58,9 @@
     <section class="hero">
       <div class="hero-banner">
         <img
-          src="assets/images/mid-banner.jpg"
+          src="assets/images/hero.png"
           alt="Hero Banner"
-          class="hero-img"
+          class="hero-img fade-in"
           onerror="
             this.style.background = '#c8b89a';
             this.src = '';
@@ -110,6 +110,21 @@
           </select>
         </div>
         <div class="filter-group">
+          <label>Scent Notes</label>
+          <select id="notesFilter" onchange="applyFilters()">
+            <option value="all">All Notes</option>
+            <option value="floral">Floral</option>
+            <option value="woody">Woody</option>
+            <option value="fresh">Fresh</option>
+            <option value="citrus">Citrus</option>
+            <option value="oriental">Oriental</option>
+            <option value="fruity">Fruity</option>
+            <option value="spicy">Spicy</option>
+            <option value="vanilla">Vanilla</option>
+            <option value="musk">Musk</option>
+          </select>
+        </div>
+        <div class="filter-group">
           <label>Sort By</label>
           <select id="sortFilter" onchange="applyFilters()">
             <option value="default">Default</option>
@@ -124,9 +139,9 @@
     </section>
 
     <!-- MID BANNER -->
-    <section class="mid-banner">
+    <section class="mid-banner fade-in">
       <img
-        src="assets/images/mid-banner.jpg"
+        src="assets/images/hero.png"
         alt="Collection"
         class="mid-banner-img"
         onerror="this.style.display = 'none'"
@@ -134,13 +149,13 @@
     </section>
 
     <!-- FEATURED / BEST SELLERS -->
-    <section class="featured-section">
+    <section class="featured-section fade-in">
       <h2 class="section-title">Best Sellers</h2>
       <div class="products-grid" id="featuredGrid"></div>
     </section>
 
     <!-- ABOUT -->
-    <section class="about-section" id="about">
+    <section class="about-section fade-in" id="about">
       <div class="about-content">
         <div class="about-text">
           <p class="about-label">Our Story</p>
@@ -172,7 +187,7 @@
     </section>
 
     <!-- CONTACT -->
-    <section class="contact-section" id="contact">
+    <section class="contact-section fade-in" id="contact">
       <h2 class="section-title">Get In Touch</h2>
       <div class="contact-container">
         <div class="contact-info">

@@ -291,6 +291,11 @@ function applyFilters() {
   let products = getProducts(activeCategory === 'all' ? null : activeCategory);
   const price = document.getElementById('priceFilter')?.value || 'all';
   const sort = document.getElementById('sortFilter')?.value || 'default';
+  const note = document.getElementById('notesFilter')?.value || 'all';
+
+  if (note !== 'all') {
+    products = products.filter(p => p.notes === note);
+  }
 
   if (price !== 'all') {
     if (price === '2000+') products = products.filter(p => p.price >= 2000);
@@ -390,3 +395,23 @@ if (window.location.pathname.includes('admin.html')) {
     window.location.href = 'login.html';
   }
 }
+
+// ---- ANIMATIONS ----
+const observerOptions = {
+  root: null,
+  rootMargin: '0px',
+  threshold: 0.15
+};
+
+const observer = new IntersectionObserver((entries, observer) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('fade-in-visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, observerOptions);
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+});

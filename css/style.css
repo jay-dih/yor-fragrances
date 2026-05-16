@@ -62,9 +62,10 @@ textarea {
   right: 0;
   z-index: 100;
   height: var(--nav-h);
-  /* use warm white from palette for the nav bar so it blends with the brand identity */
-  background: var(--accent);
-  backdrop-filter: blur(10px);
+  /* use a partially transparent warm white for the glassmorphism effect */
+  background: rgba(250, 248, 244, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--sand);
   display: flex;
   align-items: center;
@@ -1667,9 +1668,33 @@ textarea {
     margin: 20px;
   }
 }
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .products-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 20px;
+    -webkit-overflow-scrolling: touch;
+    gap: 16px;
   }
+  .product-card {
+    flex: 0 0 240px;
+    scroll-snap-align: start;
+  }
+  .filter-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ===== MICRO-ANIMATIONS ===== */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.fade-in-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
