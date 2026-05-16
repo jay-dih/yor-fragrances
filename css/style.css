@@ -426,13 +426,15 @@ textarea {
 }
 .product-card {
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.3s ease;
   background: white;
-  border-radius: 2px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
 }
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
 }
 .product-img-wrap {
   width: 100%;
@@ -603,19 +605,21 @@ textarea {
 }
 .contact-form input,
 .contact-form textarea {
-  border: none;
-  border-bottom: 1px solid var(--sand);
-  padding: 12px 4px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 6px;
+  background: rgba(0,0,0,0.02);
+  padding: 14px 16px;
   line-height: 1.6;
-  background: transparent;
   outline: none;
   color: var(--text);
   resize: none;
-  transition: border-color var(--transition);
+  transition: all 0.3s ease;
 }
 .contact-form input:focus,
 .contact-form textarea:focus {
-  border-bottom-color: var(--accent);
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 .contact-form input::placeholder,
 .contact-form textarea::placeholder {
@@ -632,25 +636,31 @@ textarea {
   font-size: 0.8rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  transition: var(--transition);
+  transition: all 0.3s ease;
   cursor: pointer;
-  margin-top: 20px;
+  border-radius: 4px;
 }
 .btn-primary:hover {
   background: var(--accent-dark);
   color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
 }
 .btn-secondary {
   background: none;
   border: 1px solid var(--sand);
   color: var(--text);
-  padding: 10px 24px;
+  padding: 12px 32px;
   font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.3s ease;
+  border-radius: 4px;
 }
 .btn-secondary:hover {
   background: var(--cream);
+  transform: translateY(-2px);
 }
 .btn-full {
   width: 100%;
