@@ -200,8 +200,9 @@ const DEFAULT_ORDERS = [
 
 // ===== STORAGE HELPERS =====
 function initData() {
-  // Always reset to DEFAULT_PRODUCTS to ensure latest data
-  localStorage.setItem("yor_products", JSON.stringify(DEFAULT_PRODUCTS));
+  if (!localStorage.getItem("yor_products")) {
+    localStorage.setItem("yor_products", JSON.stringify(DEFAULT_PRODUCTS));
+  }
 
   if (!localStorage.getItem("yor_users")) {
     localStorage.setItem("yor_users", JSON.stringify(DEFAULT_USERS));
