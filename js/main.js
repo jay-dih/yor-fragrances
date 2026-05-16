@@ -140,8 +140,12 @@ function addToCart(productId, qty = 1) {
   if (!p) return;
   const cart = getCart();
   const existing = cart.find(i => i.id === productId);
-  if (existing) existing.qty += qty;
-  else cart.push({ id: productId, name: p.name, price: p.price, image: p.image, qty });
+  if (existing) {
+    existing.qty += qty;
+    existing.selected = true;
+  } else {
+    cart.push({ id: productId, name: p.name, price: p.price, image: p.image, qty, selected: true });
+  }
   saveCart(cart);
   updateCartCount();
   showToast(`"${p.name}" added to cart`);
@@ -159,11 +163,24 @@ function renderCart() {
     return;
   }
 
+  const allSelected = cart.every(i => i.selected !== false);
   let subtotal = 0;
-  itemsEl.innerHTML = cart.map(item => {
-    subtotal += item.price * item.qty;
+  
+  let html = `
+    <div class="cart-header" style="display:flex; align-items:center; gap:12px; padding:16px 0; border-bottom:1px solid var(--sand-light); margin-bottom:12px;">
+      <input type="checkbox" id="selectAllCart" class="custom-checkbox" ${allSelected ? 'checked' : ''} onchange="toggleAllCartSelection(this.checked)" />
+      <label for="selectAllCart" style="font-size:0.9rem; cursor:pointer; font-weight:500;">Select All (${cart.length} items)</label>
+    </div>
+  `;
+
+  html += cart.map(item => {
+    const isChecked = item.selected !== false;
+    if (isChecked) subtotal += item.price * item.qty;
     return `
       <div class="cart-item">
+        <div style="display:flex; align-items:center; justify-content:center;">
+          <input type="checkbox" class="custom-checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCartSelection(${item.id})" />
+        </div>
         <img src="${item.image}" alt="${item.name}" onerror="this.src=''; this.style.background='var(--sand-light)'"/>
         <div class="cart-item-info">
           <h4>${item.name}</h4>
@@ -181,16 +198,35 @@ function renderCart() {
       </div>
     `;
   }).join('');
+  
+  itemsEl.innerHTML = html;
 
-  const shipping = subtotal > 1500 ? 0 : 100;
+  const shipping = subtotal > 1500 || subtotal === 0 ? 0 : 100;
   summaryEl.innerHTML = `
     <h3>Order Summary</h3>
     <div class="summary-row"><span>Subtotal</span><span>₱${subtotal.toLocaleString()}.00</span></div>
     <div class="summary-row"><span>Shipping</span><span>${shipping === 0 ? 'Free' : '₱' + shipping}</span></div>
     <div class="summary-row total"><span>Total</span><span>₱${(subtotal + shipping).toLocaleString()}.00</span></div>
-    <button class="checkout-btn" onclick="checkout()">Place Order / Inquiry</button>
+    <button class="checkout-btn" onclick="checkout()">Place Order</button>
     <a href="shop.html" class="continue-shopping">← Continue Shopping</a>
   `;
+}
+
+function toggleCartSelection(productId) {
+  const cart = getCart();
+  const item = cart.find(i => i.id === productId);
+  if (item) {
+    item.selected = item.selected === false ? true : false;
+    saveCart(cart);
+    renderCart();
+  }
+}
+
+function toggleAllCartSelection(isChecked) {
+  const cart = getCart();
+  cart.forEach(i => i.selected = isChecked);
+  saveCart(cart);
+  renderCart();
 }
 
 function updateCartQty(productId, delta) {
@@ -218,20 +254,29 @@ function checkout() {
     return;
   }
   const cart = getCart();
-  if (cart.length === 0) return;
+  const selectedItems = cart.filter(i => i.selected !== false);
+  
+  if (selectedItems.length === 0) {
+    showToast('Please select at least one item to checkout.');
+    return;
+  }
+  
   // Save order
   const orders = getOrders();
   const newOrder = {
     id: 'ORD-' + String(orders.length + 1).padStart(3, '0'),
     customer: user.name,
-    items: cart.map(i => `${i.name} x${i.qty}`).join(', '),
-    total: cart.reduce((s, i) => s + i.price * i.qty, 0),
+    items: selectedItems.map(i => `${i.name} x${i.qty}`).join(', '),
+    total: selectedItems.reduce((s, i) => s + i.price * i.qty, 0),
     status: 'Pending',
     date: new Date().toISOString().split('T')[0]
   };
   orders.push(newOrder);
   localStorage.setItem('yor_orders', JSON.stringify(orders));
-  saveCart([]);
+  
+  const remainingCart = cart.filter(i => i.selected === false);
+  saveCart(remainingCart);
+  
   updateCartCount();
   showToast('Order placed! We\'ll contact you to confirm.');
   setTimeout(() => renderCart(), 500);

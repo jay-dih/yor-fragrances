@@ -835,11 +835,17 @@ textarea {
 }
 .cart-item {
   display: grid;
-  grid-template-columns: 80px 1fr auto;
+  grid-template-columns: 30px 80px 1fr auto;
   gap: 16px;
   align-items: center;
   padding: 20px 0;
   border-bottom: 1px solid var(--sand-light);
+}
+.custom-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 .cart-item img {
   width: 80px;

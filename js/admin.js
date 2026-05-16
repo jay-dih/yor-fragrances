@@ -100,7 +100,15 @@ function renderOrdersTable() {
       <td>${o.customer}</td>
       <td style="max-width:220px;font-size:0.8rem">${o.items}</td>
       <td>₱${o.total.toLocaleString()}</td>
-      <td><span class="badge badge-${o.status.toLowerCase()}">${o.status}</span></td>
+      <td>
+        <select style="padding:4px; font-size:0.8rem; border:1px solid var(--sand); border-radius:2px; cursor:pointer;" onchange="updateOrderStatus('${o.id}', this.value)">
+          <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
+          <option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+          <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+          <option value="Completed" ${o.status === 'Completed' ? 'selected' : ''}>Completed</option>
+          <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+        </select>
+      </td>
       <td>${o.date}</td>
     </tr>
   `,
@@ -121,6 +129,9 @@ function renderUsersTable() {
       <td>${u.email}</td>
       <td><span class="badge ${u.role === "admin" ? "badge-yes" : "badge-no"}">${u.role}</span></td>
       <td>${u.registered}</td>
+      <td>
+        <button class="btn-delete" onclick="deleteUser('${u.username}')">Delete</button>
+      </td>
     </tr>
   `,
     )
@@ -196,6 +207,71 @@ function deleteProduct(id) {
   renderProductsTable();
   renderDashboard();
   showToast("Product deleted");
+}
+
+// ---- ORDERS MGT ----
+function updateOrderStatus(id, status) {
+  const orders = getOrders();
+  const order = orders.find(o => o.id === id);
+  if (order) {
+    order.status = status;
+    localStorage.setItem('yor_orders', JSON.stringify(orders));
+    showToast(`Order ${id} marked as ${status}`);
+  }
+}
+
+// ---- USERS MGT ----
+function deleteUser(username) {
+  const currentUser = getCurrentUser();
+  if (currentUser.username === username) {
+    alert("You cannot delete your own admin account while logged in.");
+    return;
+  }
+  if (!confirm(`Are you sure you want to delete user '${username}'?`)) return;
+  
+  const users = getUsers().filter(u => u.username !== username);
+  saveUsers(users);
+  renderUsersTable();
+  renderDashboard();
+  showToast("User deleted successfully");
+}
+
+function openUserModal() {
+  const modal = document.getElementById("userModal");
+  if (!modal) return;
+  document.querySelector("#userModal .modal-form").reset();
+  modal.classList.add("open");
+}
+
+function closeUserModal() {
+  document.getElementById("userModal")?.classList.remove("open");
+}
+
+function saveAdminUser(e) {
+  e.preventDefault();
+  const users = getUsers();
+  const uname = document.getElementById("uUsername").value.trim();
+  const email = document.getElementById("uEmail").value.trim();
+  
+  if (users.find(u => u.username === uname)) { showToast('Username already taken'); return; }
+  if (users.find(u => u.email === email)) { showToast('Email already registered'); return; }
+
+  const newUser = {
+    id: Date.now(),
+    username: uname,
+    name: document.getElementById("uName").value.trim(),
+    email: email,
+    password: document.getElementById("uPassword").value,
+    role: "admin",
+    registered: new Date().toISOString().split("T")[0]
+  };
+
+  users.push(newUser);
+  saveUsers(users);
+  closeUserModal();
+  renderUsersTable();
+  renderDashboard();
+  showToast("Admin user created successfully!");
 }
 
 // ---- INIT ----
