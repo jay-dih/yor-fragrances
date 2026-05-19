@@ -36,7 +36,7 @@
           />
           <div class="search-dropdown" id="searchDropdown"></div>
         </div>
-        <a href="cart.html" class="nav-icon" title="Cart">
+        <a href="#" class="nav-icon" title="Cart" onclick="toggleCartDrawer(event)">
           &#128722;
           <span class="cart-count" id="cartCount">0</span>
         </a>
@@ -209,6 +209,21 @@
 
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
+
+    <!-- Cart Drawer -->
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCartDrawer()"></div>
+    <div class="cart-drawer" id="cartDrawer">
+      <div class="cart-drawer-header">
+        <h2>Your Cart</h2>
+        <button class="close-drawer" onclick="toggleCartDrawer()">&#10005;</button>
+      </div>
+      <div class="cart-drawer-body" id="cartDrawerItems">
+        <!-- Items render here -->
+      </div>
+      <div class="cart-drawer-footer" id="cartDrawerSummary">
+        <!-- Summary renders here -->
+      </div>
+    </div>
 
     <script src="js/data.js"></script>
     <script src="js/main.js"></script>
