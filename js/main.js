@@ -274,12 +274,78 @@ function removeFromCart(productId) {
 let _checkoutItems = [];
 let _selectedPayment = null;
 
+function ensurePaymentModal() {
+  if (document.getElementById('paymentModal')) return; // already exists
+  const div = document.createElement('div');
+  div.innerHTML = `
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal" style="max-width:520px; padding:0; overflow:hidden;">
+      <div style="background:var(--dark); padding:24px 30px; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-family:var(--font-display); color:white; font-size:1.6rem; font-weight:300; margin:0;">Choose Payment Method</h3>
+        <button onclick="closePaymentModal()" style="background:none; border:none; color:rgba(255,255,255,0.6); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+      </div>
+      <div style="padding:30px;">
+        <div id="paymentSummary" style="background:var(--cream); border-radius:6px; padding:16px; margin-bottom:24px; font-size:0.9rem; color:var(--text);"></div>
+        <div style="display:flex; gap:12px; margin-bottom:24px;">
+          <label class="payment-option" id="optCOD" onclick="selectPayment('COD')">
+            <div class="payment-option-icon">🚗</div>
+            <div>
+              <div style="font-weight:500;">Cash on Delivery</div>
+              <div style="font-size:0.8rem; color:var(--text-light); margin-top:2px;">Pay when you receive</div>
+            </div>
+          </label>
+          <label class="payment-option" id="optGCash" onclick="selectPayment('GCash')">
+            <div class="payment-option-icon" style="background:#1A75FF; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;">G</div>
+            <div>
+              <div style="font-weight:500;">GCash</div>
+              <div style="font-size:0.8rem; color:var(--text-light); margin-top:2px;">Scan QR &amp; upload receipt</div>
+            </div>
+          </label>
+        </div>
+        <div id="gcashFlow" style="display:none;">
+          <div style="border:1px solid var(--sand-light); border-radius:8px; padding:20px; text-align:center; margin-bottom:20px;">
+            <p style="font-size:0.9rem; color:var(--text-light); margin-bottom:12px;">Scan this QR code using your GCash app to send payment.</p>
+            <img src="assets/images/gcash-qr.png" alt="GCash QR Code" style="max-width:220px; width:100%; border-radius:8px; box-shadow:var(--shadow); margin-bottom:12px;"/>
+            <p style="font-size:0.85rem; color:var(--text-light);">After payment, take a <strong>screenshot of your receipt</strong> and upload it below.</p>
+          </div>
+          <div class="upload-area" id="uploadArea" onclick="document.getElementById('receiptUpload').click()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--accent); margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p style="margin:0; font-size:0.9rem; color:var(--text-light);">Click to upload receipt screenshot</p>
+            <p style="margin:4px 0 0; font-size:0.78rem; color:var(--text-light);">JPG, PNG accepted</p>
+          </div>
+          <input type="file" id="receiptUpload" accept="image/*" style="display:none;" onchange="previewReceipt(this)"/>
+          <div id="receiptPreview" style="display:none; margin-top:12px; text-align:center;">
+            <img id="receiptImg" src="" alt="Receipt" style="max-height:180px; border-radius:6px; border:1px solid var(--sand-light);"/>
+            <p style="font-size:0.8rem; color:var(--accent); margin-top:6px;">✓ Receipt uploaded</p>
+          </div>
+        </div>
+        <div id="codFlow" style="display:none;">
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-light); margin-bottom:6px;">Delivery Address</label>
+            <textarea id="deliveryAddress" placeholder="Enter your full delivery address..." style="width:100%; border:1px solid var(--sand); border-radius:4px; padding:12px; font-family:inherit; font-size:0.9rem; resize:vertical; min-height:80px; box-sizing:border-box;"></textarea>
+          </div>
+          <div>
+            <label style="display:block; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-light); margin-bottom:6px;">Contact Number</label>
+            <input type="tel" id="contactNumber" placeholder="+63 9xx xxx xxxx" style="width:100%; border:1px solid var(--sand); border-radius:4px; padding:10px 12px; font-family:inherit; font-size:0.9rem; box-sizing:border-box;"/>
+          </div>
+        </div>
+        <button class="btn-primary" id="confirmPaymentBtn" onclick="confirmPayment()" style="width:100%; margin-top:24px; padding:16px; display:none;">
+          Place Order
+        </button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+}
+
 function checkout() {
+  ensurePaymentModal(); // inject modal into DOM if not already present
   const user = getCurrentUser();
   if (!user) { openCheckoutAuthModal(); return; }
   const cart = getCart();
   _checkoutItems = cart.filter(i => i.selected !== false);
   if (_checkoutItems.length === 0) { showToast('Please select at least one item.'); return; }
+
 
   // Build summary
   const total = _checkoutItems.reduce((s, i) => s + i.price * i.qty, 0);
