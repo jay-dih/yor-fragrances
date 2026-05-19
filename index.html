@@ -205,12 +205,14 @@
     <script src="js/data.js"></script>
     <script src="js/main.js"></script>
     <script>
-      renderProducts(
-        "featuredGrid",
-        getProducts()
-          .filter((p) => p.featured)
-          .slice(0, 4)
-      );
+      async function initFeatured() {
+        const products = await getProducts();
+        renderProducts(
+          "featuredGrid",
+          products.filter((p) => p.featured).slice(0, 4)
+        );
+      }
+      initFeatured();
     </script>
   </body>
 </html>

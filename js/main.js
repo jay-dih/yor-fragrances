@@ -82,8 +82,8 @@ function renderProducts(gridId, products) {
 // ---- PRODUCT DETAIL MODAL ----
 let detailQty = 1;
 
-function openProductDetail(id) {
-  const products = getProducts();
+async function openProductDetail(id) {
+  const products = await getProducts();
   const p = products.find(pr => pr.id === id);
   if (!p) return;
   detailQty = 1;
@@ -134,8 +134,8 @@ function closeProductDetail() {
 }
 
 // ---- CART ----
-function addToCart(productId, qty = 1) {
-  const products = getProducts();
+async function addToCart(productId, qty = 1) {
+  const products = await getProducts();
   const p = products.find(pr => pr.id === productId);
   if (!p) return;
   const cart = getCart();
@@ -247,7 +247,7 @@ function removeFromCart(productId) {
   showToast('Item removed from cart');
 }
 
-function checkout() {
+async function checkout() {
   const user = getCurrentUser();
   if (!user) {
     openCheckoutAuthModal();
@@ -261,25 +261,26 @@ function checkout() {
     return;
   }
   
-  // Save order
-  const orders = getOrders();
+  // Save order via API
   const newOrder = {
-    id: 'ORD-' + String(orders.length + 1).padStart(3, '0'),
+    id: 'ORD-' + Math.floor(1000 + Math.random() * 9000), // Random 4-digit ID
     customer: user.name,
     items: selectedItems.map(i => `${i.name} x${i.qty}`).join(', '),
     total: selectedItems.reduce((s, i) => s + i.price * i.qty, 0),
     status: 'Pending',
     date: new Date().toISOString().split('T')[0]
   };
-  orders.push(newOrder);
-  localStorage.setItem('yor_orders', JSON.stringify(orders));
-  
-  const remainingCart = cart.filter(i => i.selected === false);
-  saveCart(remainingCart);
-  
-  updateCartCount();
-  showToast('Order placed! We\'ll contact you to confirm.');
-  setTimeout(() => renderCart(), 500);
+
+  const res = await apiFetch('orders.php', { method: 'POST', body: JSON.stringify(newOrder) });
+  if (res && res.success) {
+    const remainingCart = cart.filter(i => i.selected === false);
+    saveCart(remainingCart);
+    updateCartCount();
+    showToast('Order placed! We\'ll contact you to confirm.');
+    setTimeout(() => renderCart(), 500);
+  } else {
+    showToast('Failed to place order. Please try again.');
+  }
 }
 
 function openCheckoutAuthModal() {
@@ -294,14 +295,17 @@ function closeCheckoutAuthModal() {
 
 // ---- SEARCH ----
 let searchTimeout;
-function handleSearch(val) {
+async function handleSearch(val) {
   clearTimeout(searchTimeout);
   if (!val.trim()) { hideSearchDropdown(); return; }
-  searchTimeout = setTimeout(() => {
-    const results = getProducts().filter(p =>
+  
+  searchTimeout = setTimeout(async () => {
+    const products = await getProducts();
+    const results = products.filter(p =>
       p.name.toLowerCase().includes(val.toLowerCase()) ||
       p.category.includes(val.toLowerCase())
     ).slice(0, 5);
+    
     const dropdown = document.getElementById('searchDropdown');
     if (!dropdown) return;
     if (results.length === 0) {
@@ -342,8 +346,8 @@ function toggleFilterPanel() {
   document.getElementById('filterPanel')?.classList.toggle('open');
 }
 
-function applyFilters() {
-  let products = getProducts(activeCategory === 'all' ? null : activeCategory);
+async function applyFilters() {
+  let products = await getProducts(activeCategory === 'all' ? null : activeCategory);
   const price = document.getElementById('priceFilter')?.value || 'all';
   const sort = document.getElementById('sortFilter')?.value || 'default';
   const note = document.getElementById('notesFilter')?.value || 'all';
@@ -368,8 +372,8 @@ function applyFilters() {
 
 // ---- LOAD MORE ----
 let loadedCount = 8;
-function loadMore() {
-  const products = getProducts(activeCategory === 'all' ? null : activeCategory);
+async function loadMore() {
+  const products = await getProducts(activeCategory === 'all' ? null : activeCategory);
   loadedCount = Math.min(loadedCount + 4, products.length);
   renderProducts('productsGrid', products.slice(0, loadedCount));
   if (loadedCount >= products.length) {
@@ -378,44 +382,49 @@ function loadMore() {
 }
 
 // ---- AUTH ----
-function handleLogin(e) {
+async function handleLogin(e) {
   e.preventDefault();
   const username = document.getElementById('loginUser').value.trim();
   const password = document.getElementById('loginPass').value;
-  const users = getUsers();
-  const user = users.find(u => (u.username === username || u.email === username) && u.password === password);
-  if (!user) { showToast('Invalid username or password'); return; }
-  const { password: _, ...safeUser } = user;
-  setCurrentUser(safeUser);
-  showToast(`Welcome back, ${user.name}!`);
-  setTimeout(() => {
-    window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
-  }, 800);
+  
+  const res = await apiFetch('auth.php', {
+    method: 'POST',
+    body: JSON.stringify({ action: 'login', username, password })
+  });
+
+  if (res && res.success) {
+    setCurrentUser(res.user);
+    showToast(`Welcome back, ${res.user.name}!`);
+    setTimeout(() => {
+      window.location.href = res.user.role === 'admin' ? 'admin.html' : 'index.html';
+    }, 800);
+  } else {
+    showToast(res?.error || 'Login failed');
+  }
 }
 
-function handleRegister(e) {
+async function handleRegister(e) {
   e.preventDefault();
   const name  = document.getElementById('regName').value.trim();
-  const uname = document.getElementById('regUser').value.trim();
+  const username = document.getElementById('regUser').value.trim();
   const email = document.getElementById('regEmail').value.trim();
-  const pass  = document.getElementById('regPass').value;
+  const password  = document.getElementById('regPass').value;
   const conf  = document.getElementById('regPassConfirm').value;
 
-  if (pass !== conf) { showToast('Passwords do not match'); return; }
-  const users = getUsers();
-  if (users.find(u => u.username === uname)) { showToast('Username already taken'); return; }
-  if (users.find(u => u.email === email)) { showToast('Email already registered'); return; }
+  if (password !== conf) { showToast('Passwords do not match'); return; }
 
-  const newUser = {
-    id: Date.now(), username: uname, password: pass, name, email,
-    role: 'user', registered: new Date().toISOString().split('T')[0]
-  };
-  users.push(newUser);
-  saveUsers(users);
-  const { password: _, ...safeUser } = newUser;
-  setCurrentUser(safeUser);
-  showToast('Account created! Welcome to YOR Fragrances.');
-  setTimeout(() => window.location.href = 'index.html', 900);
+  const res = await apiFetch('auth.php', {
+    method: 'POST',
+    body: JSON.stringify({ action: 'register', username, email, password, name, role: 'user' })
+  });
+
+  if (res && res.success) {
+    setCurrentUser(res.user);
+    showToast('Account created! Welcome to YOR Fragrances.');
+    setTimeout(() => window.location.href = 'index.html', 900);
+  } else {
+    showToast(res?.error || 'Registration failed');
+  }
 }
 
 function logoutUser() {
@@ -431,26 +440,24 @@ function inquireProduct(name) {
 }
 
 // ---- CONTACT FORM ----
-function submitContact(e) {
+async function submitContact(e) {
   e.preventDefault();
   const name = document.getElementById("contactName")?.value.trim();
   const info = document.getElementById("contactInfo")?.value.trim();
   const message = document.getElementById("contactMessage")?.value.trim();
   
   if(name && info && message) {
-    const inquiries = getInquiries();
-    inquiries.push({
-      id: Date.now(),
-      name,
-      contact: info,
-      message,
-      date: new Date().toISOString().split("T")[0]
+    const res = await apiFetch('inquiries.php', {
+      method: 'POST',
+      body: JSON.stringify({ name, contact: info, message, date: new Date().toISOString().split("T")[0] })
     });
-    saveInquiries(inquiries);
+    if (res && res.success) {
+      showToast('Message sent! We\'ll get back to you shortly.');
+      e.target.reset();
+    } else {
+      showToast('Failed to send message.');
+    }
   }
-  
-  showToast('Message sent! We\'ll get back to you shortly.');
-  e.target.reset();
 }
 
 // ---- NEWSLETTER ----

@@ -1,246 +1,64 @@
-// ===== DATA LAYER =====
-// Products are stored here. In a real system, this comes from a database.
-// To add/change products, use the admin panel (admin.html) and it saves to localStorage.
+// ===== DATA LAYER (API INTEGRATION) =====
 
-const DEFAULT_PRODUCTS = [
-  {
-    id: 1,
-    name: "Rose Velvet",
-    category: "women",
-    notes: "floral",
-    price: 850,
-    stock: 20,
-    featured: true,
-    description:
-      "A rich, velvety blend of Turkish rose, soft musk, and warm sandalwood. Perfect for evenings and special occasions.",
-    image: "assets/images/floral.png",
-  },
-  {
-    id: 2,
-    name: "Amber Dusk",
-    category: "women",
-    notes: "oriental",
-    price: 720,
-    stock: 15,
-    featured: false,
-    description:
-      "Sweet amber heart notes with vanilla base and hints of jasmine. A warm and comforting scent for daily wear.",
-    image: "assets/images/floral.png",
-  },
+const API_BASE = 'api/';
 
-  {
-    id: 3,
-    name: "Ocean Noir",
-    category: "men",
-    notes: "fresh",
-    price: 950,
-    stock: 12,
-    featured: true,
-    description:
-      "Bold and fresh – crisp aquatic top notes with dark cedar and vetiver base. A confident, modern masculine scent.",
-    image: "assets/images/woody.png",
-  },
-  {
-    id: 4,
-    name: "Cedar & Smoke",
-    category: "men",
-    notes: "woody",
-    price: 1100,
-    stock: 8,
-    featured: false,
-    description:
-      "A brooding blend of smoked cedar, leather accord, and a hint of black pepper. For the bold and distinguished.",
-    image: "assets/images/woody.png",
-  },
-  {
-    id: 5,
-    name: "Citrus Bloom",
-    category: "unisex",
-    notes: "citrus",
-    price: 650,
-    stock: 25,
-    featured: false,
-    description:
-      "Light and uplifting. Fresh bergamot and lemon zest over a floral heart of white peony. Great for daytime.",
-    image: "assets/images/unisex.png",
-  },
-  {
-    id: 6,
-    name: "Midnight Oud",
-    category: "unisex",
-    notes: "woody",
-    price: 1400,
-    stock: 6,
-    featured: true,
-    description:
-      "A bold oud-based perfume with earthy richness and exotic depth. Long-lasting and deeply impactful.",
-    image: "assets/images/woody.png",
-  },
-  {
-    id: 7,
-    name: "Peach Whisper",
-    category: "women",
-    notes: "fruity",
-    price: 580,
-    stock: 18,
-    featured: false,
-    description:
-      "Sweet, delicate peach blossoms and fresh apricot with a light musky dry down. Youthful and playful.",
-    image: "assets/images/floral.png",
-  },
-  {
-    id: 8,
-    name: "Green Forest",
-    category: "men",
-    notes: "fresh",
-    price: 780,
-    stock: 14,
-    featured: false,
-    description:
-      "Earthy ferns, pine needles, and green moss. A fresh and grounding fragrance inspired by nature.",
-    image: "assets/images/unisex.png",
-  },
-  {
-    id: 9,
-    name: "Vanilla Soleil",
-    category: "unisex",
-    notes: "vanilla",
-    price: 690,
-    stock: 22,
-    featured: true,
-    description:
-      "A warm, sun-kissed vanilla with coconut milk and soft florals. Cheerful, cozy, and universally loved.",
-    image: "assets/images/unisex.png",
-  },
-  {
-    id: 10,
-    name: "Iris Garden",
-    category: "women",
-    notes: "floral",
-    price: 880,
-    stock: 10,
-    featured: false,
-    description:
-      "Powdery iris with violet leaf and pale wood. Sophisticated, clean, and effortlessly elegant.",
-    image: "assets/images/floral.png",
-  },
-  {
-    id: 11,
-    name: "Spiced Tobacco",
-    category: "men",
-    notes: "spicy",
-    price: 1250,
-    stock: 7,
-    featured: false,
-    description:
-      "Warm tobacco leaf, spiced with cardamom and cinnamon. Rich and addictive – a statement fragrance.",
-    image: "assets/images/woody.png",
-  },
-  {
-    id: 12,
-    name: "White Musk",
-    category: "unisex",
-    notes: "musk",
-    price: 550,
-    stock: 30,
-    featured: false,
-    description:
-      "Clean, soft white musk over a sheer floral base. The ultimate everyday scent – subtle and addicting.",
-    image: "assets/images/unisex.png",
-  },
-];
-
-const DEFAULT_USERS = [
-  {
-    id: 1,
-    username: "admin",
-    password: "admin123",
-    name: "YOR Admin",
-    email: "admin@yorfragrances.com",
-    role: "admin",
-    registered: "2025-01-01",
-  },
-  {
-    id: 2,
-    username: "user",
-    password: "user123",
-    name: "Sample User",
-    email: "user@example.com",
-    role: "user",
-    registered: "2025-03-10",
-  },
-];
-
-const DEFAULT_ORDERS = [
-  {
-    id: "ORD-001",
-    customer: "Sample User",
-    items: "Rose Velvet x1, White Musk x2",
-    total: 1950,
-    status: "Pending",
-    date: "2025-06-01",
-  },
-  {
-    id: "ORD-002",
-    customer: "Guest",
-    items: "Ocean Noir x1",
-    total: 950,
-    status: "Confirmed",
-    date: "2025-06-03",
-  },
-  {
-    id: "ORD-003",
-    customer: "Sample User",
-    items: "Midnight Oud x1",
-    total: 1400,
-    status: "Confirmed",
-    date: "2025-06-04",
-  },
-];
-
-// ===== STORAGE HELPERS =====
-function initData() {
-  if (!localStorage.getItem("yor_products")) {
-    localStorage.setItem("yor_products", JSON.stringify(DEFAULT_PRODUCTS));
-  }
-
-  if (!localStorage.getItem("yor_users")) {
-    localStorage.setItem("yor_users", JSON.stringify(DEFAULT_USERS));
-  }
-  if (!localStorage.getItem("yor_orders")) {
-    localStorage.setItem("yor_orders", JSON.stringify(DEFAULT_ORDERS));
-  }
-  if (!localStorage.getItem("yor_inquiries")) {
-    localStorage.setItem("yor_inquiries", JSON.stringify([]));
+async function apiFetch(endpoint, options = {}) {
+  try {
+    const res = await fetch(API_BASE + endpoint, options);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.error('API Error:', e);
+    return null;
   }
 }
 
-function getProducts(category) {
-  initData();
-  let products = JSON.parse(localStorage.getItem("yor_products"));
-  if (category && category !== "all")
-    products = products.filter((p) => p.category === category);
-  return products;
+// PRODUCTS
+async function getProducts(category = 'all') {
+  const url = category && category !== 'all' ? `products.php?category=${category}` : `products.php`;
+  const data = await apiFetch(url);
+  return data || [];
 }
 
-function saveProducts(products) {
-  localStorage.setItem("yor_products", JSON.stringify(products));
+async function addProduct(product) {
+  return await apiFetch('products.php', { method: 'POST', body: JSON.stringify(product) });
 }
 
-function getUsers() {
-  initData();
-  return JSON.parse(localStorage.getItem("yor_users"));
+async function updateProduct(product) {
+  return await apiFetch('products.php', { method: 'PUT', body: JSON.stringify(product) });
 }
 
-function saveUsers(users) {
-  localStorage.setItem("yor_users", JSON.stringify(users));
+async function deleteProductApi(id) {
+  return await apiFetch(`products.php?id=${id}`, { method: 'DELETE' });
 }
 
-function getOrders() {
-  initData();
-  return JSON.parse(localStorage.getItem("yor_orders"));
+// USERS
+async function getUsers() {
+  const data = await apiFetch('users.php');
+  return data || [];
 }
 
+async function deleteUserApi(username) {
+  return await apiFetch(`users.php?username=${username}`, { method: 'DELETE' });
+}
+
+// ORDERS
+async function getOrders() {
+  const data = await apiFetch('orders.php');
+  return data || [];
+}
+
+async function updateOrderStatusApi(id, status) {
+  return await apiFetch('orders.php', { method: 'PUT', body: JSON.stringify({id, status}) });
+}
+
+// INQUIRIES
+async function getInquiries() {
+  const data = await apiFetch('inquiries.php');
+  return data || [];
+}
+
+// LOCAL STORAGE HELPERS (For persistent client-side state)
 function getCart() {
   return JSON.parse(localStorage.getItem("yor_cart") || "[]");
 }
@@ -257,15 +75,3 @@ function setCurrentUser(user) {
   if (user) localStorage.setItem("yor_current_user", JSON.stringify(user));
   else localStorage.removeItem("yor_current_user");
 }
-
-function getInquiries() {
-  initData();
-  return JSON.parse(localStorage.getItem("yor_inquiries") || "[]");
-}
-
-function saveInquiries(inquiries) {
-  localStorage.setItem("yor_inquiries", JSON.stringify(inquiries));
-}
-
-// ===== INIT =====
-initData();

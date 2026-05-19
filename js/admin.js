@@ -17,10 +17,10 @@ function showAdminTab(tab, btn) {
   if (tab === "inquiries") renderInquiriesTable();
 }
 
-function renderDashboard() {
-  const products = getProducts();
-  const orders = getOrders();
-  const users = getUsers();
+async function renderDashboard() {
+  const products = await getProducts();
+  const orders = await getOrders();
+  const users = await getUsers();
 
   document.getElementById("stat-products").textContent = products.length;
   document.getElementById("stat-orders").textContent = orders.length;
@@ -65,8 +65,8 @@ function renderDashboard() {
   }
 }
 
-function renderProductsTable() {
-  const products = getProducts();
+async function renderProductsTable() {
+  const products = await getProducts();
   const tbody = document.getElementById("productsTableBody");
   if (!tbody) return;
   tbody.innerHTML = products
@@ -89,8 +89,8 @@ function renderProductsTable() {
     .join("");
 }
 
-function renderOrdersTable() {
-  const orders = getOrders();
+async function renderOrdersTable() {
+  const orders = await getOrders();
   const tbody = document.getElementById("ordersTableBody");
   if (!tbody) return;
   tbody.innerHTML = orders
@@ -98,9 +98,9 @@ function renderOrdersTable() {
       (o) => `
     <tr>
       <td><strong>${o.id}</strong></td>
-      <td>${o.customer}</td>
-      <td style="max-width:220px;font-size:0.8rem">${o.items}</td>
-      <td>₱${o.total.toLocaleString()}</td>
+      <td>${o.customer_name}</td>
+      <td style="max-width:220px;font-size:0.8rem">${o.items_summary}</td>
+      <td>₱${parseFloat(o.total).toLocaleString()}</td>
       <td>
         <select style="padding:4px; font-size:0.8rem; border:1px solid var(--sand); border-radius:2px; cursor:pointer;" onchange="updateOrderStatus('${o.id}', this.value)">
           <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
@@ -110,15 +110,15 @@ function renderOrdersTable() {
           <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
         </select>
       </td>
-      <td>${o.date}</td>
+      <td>${o.order_date}</td>
     </tr>
   `,
     )
     .join("");
 }
 
-function renderUsersTable() {
-  const users = getUsers();
+async function renderUsersTable() {
+  const users = await getUsers();
   const tbody = document.getElementById("usersTableBody");
   if (!tbody) return;
   tbody.innerHTML = users
@@ -140,12 +140,13 @@ function renderUsersTable() {
 }
 
 // ---- PRODUCT MODAL ----
-function openProductModal(id) {
+async function openProductModal(id) {
   const modal = document.getElementById("productModal");
   if (!modal) return;
 
   if (id) {
-    const p = getProducts().find((pr) => pr.id === id);
+    const products = await getProducts();
+    const p = products.find((pr) => pr.id === id);
     if (!p) return;
     document.getElementById("modalTitle").textContent = "Edit Product";
     document.getElementById("editProductId").value = p.id;
@@ -168,9 +169,8 @@ function closeProductModal() {
   document.getElementById("productModal")?.classList.remove("open");
 }
 
-function saveProduct(e) {
+async function saveProduct(e) {
   e.preventDefault();
-  const products = getProducts();
   const editId = document.getElementById("editProductId").value;
 
   const data = {
@@ -186,43 +186,39 @@ function saveProduct(e) {
   };
 
   if (editId) {
-    const idx = products.findIndex((p) => p.id === Number(editId));
-    if (idx !== -1) products[idx] = { ...products[idx], ...data };
+    data.id = Number(editId);
+    await updateProduct(data);
     showToast("Product updated!");
   } else {
-    data.id = Date.now();
-    products.push(data);
+    await addProduct(data);
     showToast("Product added!");
   }
 
-  saveProducts(products);
   closeProductModal();
   renderProductsTable();
   renderDashboard();
 }
 
-function deleteProduct(id) {
+async function deleteProduct(id) {
   if (!confirm("Delete this product?")) return;
-  const products = getProducts().filter((p) => p.id !== id);
-  saveProducts(products);
+  await deleteProductApi(id);
   renderProductsTable();
   renderDashboard();
   showToast("Product deleted");
 }
 
 // ---- ORDERS MGT ----
-function updateOrderStatus(id, status) {
-  const orders = getOrders();
-  const order = orders.find(o => o.id === id);
-  if (order) {
-    order.status = status;
-    localStorage.setItem('yor_orders', JSON.stringify(orders));
+async function updateOrderStatus(id, status) {
+  const res = await updateOrderStatusApi(id, status);
+  if (res && res.success) {
     showToast(`Order ${id} marked as ${status}`);
+  } else {
+    showToast(`Failed to update order status`);
   }
 }
 
 // ---- USERS MGT ----
-function deleteUser(username) {
+async function deleteUser(username) {
   const currentUser = getCurrentUser();
   if (currentUser.username === username) {
     alert("You cannot delete your own admin account while logged in.");
@@ -230,8 +226,7 @@ function deleteUser(username) {
   }
   if (!confirm(`Are you sure you want to delete user '${username}'?`)) return;
   
-  const users = getUsers().filter(u => u.username !== username);
-  saveUsers(users);
+  await deleteUserApi(username);
   renderUsersTable();
   renderDashboard();
   showToast("User deleted successfully");
@@ -248,38 +243,36 @@ function closeUserModal() {
   document.getElementById("userModal")?.classList.remove("open");
 }
 
-function saveAdminUser(e) {
+async function saveAdminUser(e) {
   e.preventDefault();
-  const users = getUsers();
-  const uname = document.getElementById("uUsername").value.trim();
-  const email = document.getElementById("uEmail").value.trim();
   
-  if (users.find(u => u.username === uname)) { showToast('Username already taken'); return; }
-  if (users.find(u => u.email === email)) { showToast('Email already registered'); return; }
+  const res = await apiFetch('auth.php', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'register',
+      username: document.getElementById("uUsername").value.trim(),
+      email: document.getElementById("uEmail").value.trim(),
+      name: document.getElementById("uName").value.trim(),
+      password: document.getElementById("uPassword").value,
+      role: 'admin'
+    })
+  });
 
-  const newUser = {
-    id: Date.now(),
-    username: uname,
-    name: document.getElementById("uName").value.trim(),
-    email: email,
-    password: document.getElementById("uPassword").value,
-    role: "admin",
-    registered: new Date().toISOString().split("T")[0]
-  };
-
-  users.push(newUser);
-  saveUsers(users);
-  closeUserModal();
-  renderUsersTable();
-  renderDashboard();
-  showToast("Admin user created successfully!");
+  if (res && res.success) {
+    closeUserModal();
+    renderUsersTable();
+    renderDashboard();
+    showToast("Admin user created successfully!");
+  } else {
+    showToast(res?.error || "Failed to create user");
+  }
 }
 
 // ---- INIT ----
 renderDashboard();
 
-function renderInquiriesTable() {
-  const inquiries = getInquiries();
+async function renderInquiriesTable() {
+  const inquiries = await getInquiries();
   const tbody = document.getElementById("inquiriesTableBody");
   if (!tbody) return;
   
@@ -292,7 +285,7 @@ function renderInquiriesTable() {
     .map(
       (iq) => `
     <tr>
-      <td style="white-space:nowrap;">${iq.date}</td>
+      <td style="white-space:nowrap;">${iq.inquiry_date}</td>
       <td><strong>${iq.name}</strong></td>
       <td>${iq.contact}</td>
       <td style="max-width:300px; font-size:0.85rem;">${iq.message}</td>
