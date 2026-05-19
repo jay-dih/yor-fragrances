@@ -32,7 +32,7 @@ function renderUserDropdown() {
   if (user) {
     content.innerHTML = `
       <div class="user-info"><strong>${user.name}</strong>${user.role === 'admin' ? 'Administrator' : 'Customer'}</div>
-      ${user.role === 'admin' ? '<a href="admin.html">⚙️ Admin Panel</a>' : ''}
+      ${user.role === 'admin' ? '<a href="admin.html">⚙️ Admin Panel</a>' : '<a href="my-orders.html">📦 My Orders</a>'}
       <button onclick="logoutUser()">Logout</button>
     `;
   } else {
@@ -270,40 +270,113 @@ function removeFromCart(productId) {
   showToast('Item removed from cart');
 }
 
-async function checkout() {
-  const user = getCurrentUser();
-  if (!user) {
-    openCheckoutAuthModal();
-    return;
-  }
-  const cart = getCart();
-  const selectedItems = cart.filter(i => i.selected !== false);
-  
-  if (selectedItems.length === 0) {
-    showToast('Please select at least one item to checkout.');
-    return;
-  }
-  
-  // Save order via API
-  const newOrder = {
-    id: 'ORD-' + Math.floor(1000 + Math.random() * 9000), // Random 4-digit ID
-    customer: user.name,
-    items: selectedItems.map(i => `${i.name} x${i.qty}`).join(', '),
-    total: selectedItems.reduce((s, i) => s + i.price * i.qty, 0),
-    status: 'Pending',
-    date: new Date().toISOString().split('T')[0]
-  };
+// ---- CHECKOUT & PAYMENT MODAL ----
+let _checkoutItems = [];
+let _selectedPayment = null;
 
-  const res = await apiFetch('orders.php', { method: 'POST', body: JSON.stringify(newOrder) });
+function checkout() {
+  const user = getCurrentUser();
+  if (!user) { openCheckoutAuthModal(); return; }
+  const cart = getCart();
+  _checkoutItems = cart.filter(i => i.selected !== false);
+  if (_checkoutItems.length === 0) { showToast('Please select at least one item.'); return; }
+
+  // Build summary
+  const total = _checkoutItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const summaryEl = document.getElementById('paymentSummary');
+  if (summaryEl) {
+    summaryEl.innerHTML = _checkoutItems.map(i =>
+      `<div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span>${i.name} × ${i.qty}</span><span>₱${(i.price * i.qty).toLocaleString()}</span>
+      </div>`
+    ).join('') + `<div style="border-top:1px solid var(--sand);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;font-weight:500;">
+      <span>Total</span><span>₱${total.toLocaleString()}</span></div>`;
+  }
+
+  _selectedPayment = null;
+  document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+  const gcash = document.getElementById('gcashFlow');
+  const cod   = document.getElementById('codFlow');
+  const btn   = document.getElementById('confirmPaymentBtn');
+  if (gcash) gcash.style.display = 'none';
+  if (cod) cod.style.display = 'none';
+  if (btn) btn.style.display = 'none';
+
+  const modal = document.getElementById('paymentModal');
+  if (modal) modal.classList.add('open');
+}
+
+function selectPayment(method) {
+  _selectedPayment = method;
+  document.getElementById('optCOD')?.classList.toggle('selected', method === 'COD');
+  document.getElementById('optGCash')?.classList.toggle('selected', method === 'GCash');
+  document.getElementById('gcashFlow').style.display = method === 'GCash' ? 'block' : 'none';
+  document.getElementById('codFlow').style.display   = method === 'COD'   ? 'block' : 'none';
+  document.getElementById('confirmPaymentBtn').style.display = 'block';
+}
+
+function previewReceipt(input) {
+  if (!input.files.length) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('receiptImg').src = e.target.result;
+    document.getElementById('receiptPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function confirmPayment() {
+  const user = getCurrentUser();
+  if (!user || !_selectedPayment) return;
+
+  const total = _checkoutItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+  const date = new Date().toISOString().split('T')[0];
+  const itemsStr = _checkoutItems.map(i => `${i.name} x${i.qty}`).join(', ');
+  const btn = document.getElementById('confirmPaymentBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Placing Order...'; }
+
+  let res;
+  if (_selectedPayment === 'GCash') {
+    const fileInput = document.getElementById('receiptUpload');
+    if (!fileInput.files.length) {
+      showToast('Please upload your GCash receipt screenshot.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; }
+      return;
+    }
+    const fd = new FormData();
+    fd.append('id', orderId);
+    fd.append('customer', user.name);
+    fd.append('items', itemsStr);
+    fd.append('total', total);
+    fd.append('payment_method', 'GCash');
+    fd.append('date', date);
+    fd.append('receipt', fileInput.files[0]);
+    res = await fetch('api/orders.php', { method: 'POST', body: fd }).then(r => r.json()).catch(() => null);
+  } else {
+    const address = document.getElementById('deliveryAddress')?.value.trim();
+    if (!address) { showToast('Please enter a delivery address.'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
+    res = await apiFetch('orders.php', {
+      method: 'POST',
+      body: JSON.stringify({ id: orderId, customer: user.name, items: itemsStr, total, payment_method: 'COD', date })
+    });
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; }
   if (res && res.success) {
-    const remainingCart = cart.filter(i => i.selected === false);
-    saveCart(remainingCart);
+    const remaining = getCart().filter(i => i.selected === false);
+    saveCart(remaining);
     updateCartCount();
-    showToast('Order placed! We\'ll contact you to confirm.');
-    setTimeout(() => renderCart(), 500);
+    closePaymentModal();
+    showToast('Order placed! We\'ll review and confirm your order shortly.');
+    setTimeout(() => { renderCart(); }, 600);
   } else {
     showToast('Failed to place order. Please try again.');
   }
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal')?.classList.remove('open');
 }
 
 function openCheckoutAuthModal() {
@@ -315,6 +388,7 @@ function closeCheckoutAuthModal() {
   const modal = document.getElementById('checkoutAuthModal');
   if (modal) modal.classList.remove('open');
 }
+
 
 // ---- SEARCH ----
 let searchTimeout;

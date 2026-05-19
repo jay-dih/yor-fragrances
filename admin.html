@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin – YOR Fragrances</title>
+  <link rel="icon" type="image/png" href="assets/images/uploaded_img5.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/style.css"/>
@@ -43,9 +44,10 @@
           <p class="stat-label">Registered Users</p>
           <p class="stat-value" id="stat-users">0</p>
         </div>
-        <div class="stat-card">
-          <p class="stat-label">Categories</p>
-          <p class="stat-value">4</p>
+        <div class="stat-card" style="border-left: 3px solid var(--accent);">
+          <p class="stat-label">Monthly Sales</p>
+          <p class="stat-value" id="stat-monthly-sales">₱0</p>
+          <p class="stat-sub" id="stat-monthly-label">This month</p>
         </div>
       </div>
 
@@ -82,7 +84,7 @@
 
     <!-- ORDERS TAB -->
     <div class="admin-tab" id="tab-orders">
-      <h2>Orders / Inquiries</h2>
+      <h2>Orders</h2>
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead>
@@ -91,8 +93,10 @@
               <th>Customer</th>
               <th>Items</th>
               <th>Total</th>
+              <th>Payment</th>
               <th>Status</th>
               <th>Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="ordersTableBody"></tbody>
@@ -181,8 +185,14 @@
           <textarea id="pDesc" rows="3"></textarea>
         </div>
         <div class="form-field">
-          <label>Image Path (e.g. assets/images/product1.jpg)</label>
-          <input type="text" id="pImage" placeholder="assets/images/product1.jpg"/>
+          <label>Product Image</label>
+          <div id="productImagePreview" style="margin-bottom:10px; display:none;">
+            <img id="currentProductImg" src="" alt="Current Image" style="max-height:100px; border-radius:4px; border:1px solid var(--sand-light);"/>
+            <p style="font-size:0.8rem; color:var(--text-light); margin:4px 0 0;">Current image</p>
+          </div>
+          <input type="file" id="pImageFile" accept="image/*" style="display:none;" onchange="previewProductImage(this)"/>
+          <button type="button" onclick="document.getElementById('pImageFile').click()" class="btn-secondary" style="margin:0; padding:10px 20px; width:100%; text-align:center;">📁 Choose Image from Computer</button>
+          <p style="font-size:0.78rem; color:var(--text-light); margin:6px 0 0;">Leave empty to use the default image.</p>
         </div>
         <div class="form-field checkbox-field">
           <input type="checkbox" id="pFeatured"/>
@@ -193,6 +203,43 @@
           <button type="submit" class="btn-primary">Save Product</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ORDER REVIEW MODAL -->
+  <div class="modal-overlay" id="orderReviewModal">
+    <div class="modal" style="max-width:560px; padding:0; overflow:hidden;">
+      <div style="background:var(--dark); padding:20px 28px; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-family:var(--font-display); color:white; font-size:1.4rem; font-weight:300; margin:0;">Review Order</h3>
+        <button onclick="closeOrderReviewModal()" style="background:none; border:none; color:rgba(255,255,255,0.6); font-size:1.4rem; cursor:pointer;">&times;</button>
+      </div>
+      <div style="padding:28px;">
+        <div id="orderReviewDetails" style="background:var(--cream); border-radius:6px; padding:16px; margin-bottom:20px; font-size:0.9rem;"></div>
+        <div id="orderReceiptSection" style="margin-bottom:20px; display:none;">
+          <p style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-light); margin-bottom:8px;">Payment Receipt</p>
+          <img id="orderReceiptImg" src="" alt="Receipt" style="max-width:100%; max-height:250px; border-radius:6px; border:1px solid var(--sand-light);"/>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-light); margin-bottom:6px;">Update Status</label>
+          <select id="orderReviewStatus" style="width:100%; border:1px solid var(--sand); padding:10px 14px; border-radius:4px; font-family:inherit; font-size:0.9rem;">
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Completed">Completed</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div style="margin-bottom:20px;">
+          <label style="display:block; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-light); margin-bottom:6px;">Admin Remarks (optional)</label>
+          <textarea id="orderReviewRemarks" rows="3" placeholder="Add any remarks for the customer..." style="width:100%; border:1px solid var(--sand); border-radius:4px; padding:10px 12px; font-family:inherit; font-size:0.9rem; resize:vertical; box-sizing:border-box;"></textarea>
+        </div>
+        <input type="hidden" id="orderReviewId"/>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+          <button type="button" class="btn-secondary" style="margin:0;" onclick="closeOrderReviewModal()">Cancel</button>
+          <button type="button" class="btn-primary" style="margin:0;" onclick="submitOrderReview()">Save Changes</button>
+        </div>
+      </div>
     </div>
   </div>
 

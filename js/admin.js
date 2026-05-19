@@ -22,46 +22,49 @@ async function renderDashboard() {
   const orders = await getOrders();
   const users = await getUsers();
 
-  document.getElementById("stat-products").textContent = products.length;
-  document.getElementById("stat-orders").textContent = orders.length;
-  document.getElementById("stat-users").textContent = users.length;
+  document.getElementById('stat-products').textContent = products.length;
+  document.getElementById('stat-orders').textContent = orders.length;
+  document.getElementById('stat-users').textContent = users.length;
+
+  // Monthly sales: sum totals for orders this month with status Confirmed/Shipped/Completed
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const monthlyOrders = (orders.orders || orders).filter(o => {
+    if (!o.order_date) return false;
+    const d = new Date(o.order_date);
+    return d.getMonth() === thisMonth && d.getFullYear() === thisYear
+      && ['Confirmed','Shipped','Completed'].includes(o.status);
+  });
+  const monthlySales = monthlyOrders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
+  const monthName = now.toLocaleString('default', { month: 'long' });
+  document.getElementById('stat-monthly-sales').textContent = `₱${monthlySales.toLocaleString()}`;
+  document.getElementById('stat-monthly-label').textContent = `${monthName} ${thisYear}`;
 
   // Category chart
   const cats = { women: 0, men: 0, unisex: 0 };
-  products.forEach((p) => {
-    if (cats[p.category] !== undefined) cats[p.category]++;
-  });
+  products.forEach(p => { if (cats[p.category] !== undefined) cats[p.category]++; });
   const max = Math.max(...Object.values(cats));
-  const chart = document.getElementById("categoryChart");
+  const chart = document.getElementById('categoryChart');
   if (chart) {
-    chart.innerHTML = Object.entries(cats)
-      .map(
-        ([cat, count]) => `
+    chart.innerHTML = Object.entries(cats).map(([cat, count]) => `
       <div class="chart-bar-wrap">
         <span class="chart-bar-val">${count}</span>
         <div class="chart-bar" style="height:${max > 0 ? (count / max) * 80 : 0}px"></div>
         <span class="chart-bar-label">${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
-      </div>
-    `,
-      )
-      .join("");
+      </div>`).join('');
   }
 
-  // Top products (by stock-sold proxy: lower stock = more popular)
+  // Top products by lowest stock
   const sorted = [...products].sort((a, b) => a.stock - b.stock).slice(0, 5);
-  const topEl = document.getElementById("topProducts");
+  const topEl = document.getElementById('topProducts');
   if (topEl) {
-    topEl.innerHTML = sorted
-      .map(
-        (p, i) => `
+    topEl.innerHTML = sorted.map((p, i) => `
       <div class="top-product-row">
         <strong>#${i + 1} ${p.name}</strong>
         <span>${p.category} · ₱${p.price.toLocaleString()}</span>
         <span>${p.stock} in stock</span>
-      </div>
-    `,
-      )
-      .join("");
+      </div>`).join('');
   }
 }
 
@@ -90,31 +93,27 @@ async function renderProductsTable() {
 }
 
 async function renderOrdersTable() {
-  const orders = await getOrders();
-  const tbody = document.getElementById("ordersTableBody");
+  const res = await apiFetch('orders.php');
+  const orders = (res && res.orders) ? res.orders : [];
+  const tbody = document.getElementById('ordersTableBody');
   if (!tbody) return;
-  tbody.innerHTML = orders
-    .map(
-      (o) => `
+  if (orders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-light);">No orders yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = orders.map(o => `
     <tr>
       <td><strong>${o.id}</strong></td>
       <td>${o.customer_name}</td>
-      <td style="max-width:220px;font-size:0.8rem">${o.items_summary}</td>
+      <td style="max-width:180px; font-size:0.8rem;">${o.items_summary}</td>
       <td>₱${parseFloat(o.total).toLocaleString()}</td>
-      <td>
-        <select style="padding:4px; font-size:0.8rem; border:1px solid var(--sand); border-radius:2px; cursor:pointer;" onchange="updateOrderStatus('${o.id}', this.value)">
-          <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
-          <option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-          <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-          <option value="Completed" ${o.status === 'Completed' ? 'selected' : ''}>Completed</option>
-          <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-        </select>
-      </td>
+      <td>${o.payment_method === 'GCash' ? '<span style="color:#1A75FF;font-weight:500;">GCash</span>' : 'COD'}</td>
+      <td><span class="status-badge status-${o.status}">${o.status}</span></td>
       <td>${o.order_date}</td>
-    </tr>
-  `,
-    )
-    .join("");
+      <td>
+        <button class="btn-edit" onclick='openOrderReview(${JSON.stringify(o)})'>Review</button>
+      </td>
+    </tr>`).join('');
 }
 
 async function renderUsersTable() {
@@ -141,57 +140,88 @@ async function renderUsersTable() {
 
 // ---- PRODUCT MODAL ----
 async function openProductModal(id) {
-  const modal = document.getElementById("productModal");
+  const modal = document.getElementById('productModal');
   if (!modal) return;
+  // Reset file input & preview
+  document.getElementById('pImageFile').value = '';
+  document.getElementById('productImagePreview').style.display = 'none';
 
   if (id) {
     const products = await getProducts();
-    const p = products.find((pr) => pr.id === id);
+    const p = products.find(pr => pr.id === id);
     if (!p) return;
-    document.getElementById("modalTitle").textContent = "Edit Product";
-    document.getElementById("editProductId").value = p.id;
-    document.getElementById("pName").value = p.name;
-    document.getElementById("pCategory").value = p.category;
-    document.getElementById("pPrice").value = p.price;
-    document.getElementById("pStock").value = p.stock;
-    document.getElementById("pDesc").value = p.description || "";
-    document.getElementById("pImage").value = p.image || "";
-    document.getElementById("pFeatured").checked = p.featured;
+    document.getElementById('modalTitle').textContent = 'Edit Product';
+    document.getElementById('editProductId').value = p.id;
+    document.getElementById('pName').value = p.name;
+    document.getElementById('pCategory').value = p.category;
+    document.getElementById('pPrice').value = p.price;
+    document.getElementById('pStock').value = p.stock;
+    document.getElementById('pDesc').value = p.description || '';
+    document.getElementById('pFeatured').checked = p.featured;
+    if (p.image) {
+      document.getElementById('currentProductImg').src = p.image;
+      document.getElementById('productImagePreview').style.display = 'block';
+    }
   } else {
-    document.getElementById("modalTitle").textContent = "Add Product";
-    document.getElementById("editProductId").value = "";
-    document.querySelector(".modal-form").reset();
+    document.getElementById('modalTitle').textContent = 'Add Product';
+    document.getElementById('editProductId').value = '';
+    document.querySelector('.modal-form').reset();
   }
-  modal.classList.add("open");
+  modal.classList.add('open');
+}
+
+function previewProductImage(input) {
+  if (!input.files.length) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('currentProductImg').src = e.target.result;
+    document.getElementById('productImagePreview').style.display = 'block';
+  };
+  reader.readAsDataURL(input.files[0]);
 }
 
 function closeProductModal() {
-  document.getElementById("productModal")?.classList.remove("open");
+  document.getElementById('productModal')?.classList.remove('open');
 }
 
 async function saveProduct(e) {
   e.preventDefault();
-  const editId = document.getElementById("editProductId").value;
+  const editId = document.getElementById('editProductId').value;
+  const fileInput = document.getElementById('pImageFile');
 
-  const data = {
-    name: document.getElementById("pName").value.trim(),
-    category: document.getElementById("pCategory").value,
-    price: Number(document.getElementById("pPrice").value),
-    stock: Number(document.getElementById("pStock").value),
-    description: document.getElementById("pDesc").value.trim(),
-    image:
-      document.getElementById("pImage").value.trim() ||
-      "assets/images/placeholder.jpg",
-    featured: document.getElementById("pFeatured").checked,
-  };
-
-  if (editId) {
-    data.id = Number(editId);
-    await updateProduct(data);
-    showToast("Product updated!");
+  if (fileInput.files.length > 0) {
+    // New image chosen: send as multipart
+    const fd = new FormData();
+    fd.append('name', document.getElementById('pName').value.trim());
+    fd.append('category', document.getElementById('pCategory').value);
+    fd.append('price', document.getElementById('pPrice').value);
+    fd.append('stock', document.getElementById('pStock').value);
+    fd.append('description', document.getElementById('pDesc').value.trim());
+    fd.append('featured', document.getElementById('pFeatured').checked ? '1' : '0');
+    fd.append('product_image', fileInput.files[0]);
+    if (editId) fd.append('id', editId);
+    const method = editId ? 'PUT' : 'POST';
+    const res = await fetch(`api/products.php${editId ? '?id=' + editId : ''}`, { method, body: fd }).then(r => r.json()).catch(() => null);
+    if (res && res.success) { showToast(editId ? 'Product updated!' : 'Product added!'); }
+    else showToast('Error saving product');
   } else {
-    await addProduct(data);
-    showToast("Product added!");
+    // No new image, use JSON
+    const data = {
+      name: document.getElementById('pName').value.trim(),
+      category: document.getElementById('pCategory').value,
+      price: Number(document.getElementById('pPrice').value),
+      stock: Number(document.getElementById('pStock').value),
+      description: document.getElementById('pDesc').value.trim(),
+      featured: document.getElementById('pFeatured').checked,
+    };
+    if (editId) {
+      data.id = Number(editId);
+      await updateProduct(data);
+      showToast('Product updated!');
+    } else {
+      await addProduct(data);
+      showToast('Product added!');
+    }
   }
 
   closeProductModal();
@@ -207,14 +237,55 @@ async function deleteProduct(id) {
   showToast("Product deleted");
 }
 
-// ---- ORDERS MGT ----
-async function updateOrderStatus(id, status) {
-  const res = await updateOrderStatusApi(id, status);
-  if (res && res.success) {
-    showToast(`Order ${id} marked as ${status}`);
+// ---- ORDER REVIEW MODAL ----
+function openOrderReview(order) {
+  document.getElementById('orderReviewId').value = order.id;
+  document.getElementById('orderReviewStatus').value = order.status;
+  document.getElementById('orderReviewRemarks').value = order.admin_remarks || '';
+  document.getElementById('orderReviewDetails').innerHTML = `
+    <div style="margin-bottom:8px;"><strong>Order:</strong> ${order.id}</div>
+    <div style="margin-bottom:8px;"><strong>Customer:</strong> ${order.customer_name}</div>
+    <div style="margin-bottom:8px;"><strong>Items:</strong> ${order.items_summary}</div>
+    <div style="margin-bottom:8px;"><strong>Total:</strong> ₱${parseFloat(order.total).toLocaleString()}</div>
+    <div><strong>Payment:</strong> ${order.payment_method || 'COD'} &nbsp;
+      <span class="status-badge status-${order.status}">${order.status}</span>
+    </div>`;
+
+  const receiptSection = document.getElementById('orderReceiptSection');
+  if (order.payment_receipt) {
+    document.getElementById('orderReceiptImg').src = order.payment_receipt;
+    receiptSection.style.display = 'block';
   } else {
-    showToast(`Failed to update order status`);
+    receiptSection.style.display = 'none';
   }
+  document.getElementById('orderReviewModal').classList.add('open');
+}
+
+function closeOrderReviewModal() {
+  document.getElementById('orderReviewModal')?.classList.remove('open');
+}
+
+async function submitOrderReview() {
+  const id = document.getElementById('orderReviewId').value;
+  const status = document.getElementById('orderReviewStatus').value;
+  const remarks = document.getElementById('orderReviewRemarks').value.trim();
+  const res = await apiFetch('orders.php', {
+    method: 'PUT',
+    body: JSON.stringify({ id, status, admin_remarks: remarks })
+  });
+  if (res && res.success) {
+    closeOrderReviewModal();
+    renderOrdersTable();
+    showToast(`Order ${id} updated to "${status}"`);
+  } else {
+    showToast('Failed to update order');
+  }
+}
+
+async function updateOrderStatus(id, status) {
+  const res = await apiFetch('orders.php', { method: 'PUT', body: JSON.stringify({ id, status }) });
+  if (res && res.success) showToast(`Order ${id} marked as ${status}`);
+  else showToast('Failed to update order status');
 }
 
 // ---- USERS MGT ----

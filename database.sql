@@ -69,10 +69,10 @@ INSERT IGNORE INTO `products` (`id`, `name`, `category`, `notes`, `price`, `stoc
 (12, 'White Musk', 'unisex', 'musk', 550, 30, 0, 'Clean, soft white musk over a sheer floral base. The ultimate everyday scent – subtle and addicting.', 'assets/images/unisex.png');
 
 -- Seed Data for Orders
-INSERT IGNORE INTO `orders` (`id`, `customer_name`, `items_summary`, `total`, `status`, `order_date`) VALUES
-('ORD-001', 'Sample User', 'Rose Velvet x1, White Musk x2', 1950, 'Pending', '2025-06-01'),
-('ORD-002', 'Guest', 'Ocean Noir x1', 950, 'Confirmed', '2025-06-03'),
-('ORD-003', 'Sample User', 'Midnight Oud x1', 1400, 'Confirmed', '2025-06-04');
+INSERT IGNORE INTO `orders` (`id`, `user_id`, `customer_name`, `items_summary`, `total`, `payment_method`, `status`, `order_date`) VALUES
+('ORD-001', 2, 'Sample User', 'Rose Velvet x1, White Musk x2', 1950, 'COD', 'Pending', '2025-06-01'),
+('ORD-002', NULL, 'Guest', 'Ocean Noir x1', 950, 'COD', 'Confirmed', '2025-06-03'),
+('ORD-003', 2, 'Sample User', 'Midnight Oud x1', 1400, 'COD', 'Confirmed', '2025-06-04');
 
 CREATE TABLE IF NOT EXISTS `wishlist` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,

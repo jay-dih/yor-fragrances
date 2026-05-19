@@ -434,19 +434,18 @@ textarea {
 }
 
 .shop-layout {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 40px;
-  align-items: start;
-}
-/* FILTER PANEL - Sidebar on Desktop */
-.filter-panel {
-  position: sticky;
-  top: calc(var(--nav-h) + 30px);
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 24px;
+  gap: 30px;
+}
+/* FILTER PANEL - Horizontal */
+.filter-panel {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
   background: white;
   border: 1px solid var(--sand-light);
   border-radius: 4px;
@@ -458,13 +457,10 @@ textarea {
   gap: 8px;
 }
 .filter-group label {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  color: var(--dark);
-  text-transform: none;
-  letter-spacing: 0;
-  border-bottom: 1px solid var(--sand-light);
-  padding-bottom: 8px;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   margin-bottom: 4px;
 }
 .filter-group select {
@@ -2034,3 +2030,65 @@ textarea {
   }
 }
 
+/* ===== PAYMENT MODAL ===== */
+.payment-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid var(--sand-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+.payment-option:hover { border-color: var(--accent); }
+.payment-option.selected { border-color: var(--accent); background: var(--cream); }
+.payment-option-icon { font-size: 1.5rem; flex-shrink: 0; }
+.upload-area {
+  border: 2px dashed var(--sand);
+  border-radius: 8px;
+  padding: 30px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.upload-area:hover { border-color: var(--accent); background: var(--cream); }
+
+/* ===== ORDER STATUS BADGES ===== */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.status-Pending   { background: #FFF4CC; color: #A07400; }
+.status-Confirmed { background: #D4EDDA; color: #155724; }
+.status-Shipped   { background: #CCE5FF; color: #004085; }
+.status-Completed { background: #D5EDDA; color: #0B5B23; }
+.status-Cancelled { background: #F8D7DA; color: #721C24; }
+.status-Rejected  { background: #F8D7DA; color: #721C24; }
+
+/* ===== MY ORDERS PAGE ===== */
+.my-orders-section { padding: 120px 40px 80px; max-width: 900px; margin: 0 auto; }
+.my-orders-section h1 { font-family: var(--font-display); font-size: 2.5rem; font-weight: 300; margin-bottom: 8px; }
+.orders-table-wrap { overflow-x: auto; margin-top: 30px; }
+.orders-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.orders-table th { background: var(--dark); color: white; padding: 14px 16px; text-align: left; font-family: var(--font-body); font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.78rem; }
+.orders-table td { padding: 16px; border-bottom: 1px solid var(--sand-light); color: var(--text); vertical-align: top; }
+.orders-table tr:hover td { background: var(--cream); }
+.order-remarks { font-style: italic; font-size: 0.85rem; color: var(--text-light); margin-top: 6px; padding: 8px; background: var(--cream); border-left: 3px solid var(--accent); border-radius: 2px; }
+
+/* ===== ADMIN DASHBOARD STATS ===== */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 36px; }
+.stat-card { background: white; border: 1px solid var(--sand-light); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+.stat-card .stat-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-light); }
+.stat-card .stat-value { font-family: var(--font-display); font-size: 2.2rem; font-weight: 300; color: var(--dark); }
+.stat-card .stat-sub { font-size: 0.82rem; color: var(--text-light); }
