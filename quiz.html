@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Find Your Scent – YOR Fragrances</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .quiz-container {
+      max-width: 800px;
+      margin: 100px auto 60px;
+      padding: 40px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .quiz-title {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .quiz-subtitle {
+      color: var(--text-light);
+      margin-bottom: 40px;
+    }
+    .quiz-step {
+      display: none;
+    }
+    .quiz-step.active {
+      display: block;
+      animation: fadeIn 0.5s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .quiz-question {
+      font-size: 1.4rem;
+      margin-bottom: 30px;
+      font-family: var(--font-display);
+    }
+    .quiz-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .quiz-option {
+      padding: 20px;
+      border: 1px solid var(--sand-light);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: var(--warm-white);
+    }
+    .quiz-option:hover {
+      border-color: var(--accent);
+      background: var(--cream);
+      transform: translateY(-2px);
+    }
+    .quiz-option.selected {
+      border-color: var(--accent);
+      background: rgba(184, 149, 106, 0.1);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .quiz-btn {
+      margin-top: 40px;
+      display: none;
+    }
+    #quizResults {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <button class="nav-menu-btn" onclick="toggleMobileMenu()">&#9776;</button>
+    <a href="index.html" class="nav-logo">YOR Fragrances</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop Perfumes</a>
+      <a href="index.html#about">Our Story</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <div class="nav-search">
+        <input type="text" placeholder="Search fragrances..." id="searchInput" oninput="handleSearch(this.value)" onfocus="showSearchDropdown()" onblur="hideSearchDropdown()"/>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+      <a href="#" class="nav-icon" title="Cart" onclick="toggleCartDrawer(event)">
+        &#128722;
+        <span class="cart-count" id="cartCount">0</span>
+      </a>
+      <div class="nav-user-menu">
+        <span class="nav-icon" onclick="toggleUserMenu()" title="Account">&#128100;</span>
+        <div class="user-dropdown" id="userDropdown">
+          <div id="userDropdownContent"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Quiz -->
+  <div class="quiz-container">
+    <div id="quizFlow">
+      <h1 class="quiz-title">Find Your Signature Scent</h1>
+      <p class="quiz-subtitle">Answer 3 quick questions to discover your perfect match.</p>
+
+      <!-- Step 1 -->
+      <div class="quiz-step active" id="step1">
+        <h2 class="quiz-question">1. What is your preferred fragrance family?</h2>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="selectOption(1, 'floral')">Floral & Sweet</div>
+          <div class="quiz-option" onclick="selectOption(1, 'woody')">Woody & Earthy</div>
+          <div class="quiz-option" onclick="selectOption(1, 'fresh')">Fresh & Aquatic</div>
+          <div class="quiz-option" onclick="selectOption(1, 'oriental')">Spicy & Oriental</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="quiz-step" id="step2">
+        <h2 class="quiz-question">2. When will you mostly wear this?</h2>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="selectOption(2, 'day')">Everyday Daytime Wear</div>
+          <div class="quiz-option" onclick="selectOption(2, 'night')">Evening & Special Occasions</div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="quiz-step" id="step3">
+        <h2 class="quiz-question">3. How intense do you want the scent to be?</h2>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="selectOption(3, 'light')">Light & Subtle</div>
+          <div class="quiz-option" onclick="selectOption(3, 'strong')">Bold & Long-lasting</div>
+        </div>
+      </div>
+
+      <button class="btn-primary quiz-btn" id="nextBtn" onclick="nextStep()">Next Question</button>
+    </div>
+
+    <div id="quizResults">
+      <h2 class="quiz-title">Your Perfect Match</h2>
+      <p class="quiz-subtitle" style="margin-bottom:20px;">Based on your answers, we recommend these fragrances.</p>
+      <div class="products-grid" id="quizProductsGrid" style="grid-template-columns: repeat(2, 1fr); max-width:600px; margin:0 auto;"></div>
+      <button class="btn-secondary" style="margin-top:30px;" onclick="window.location.reload()">Take Quiz Again</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Cart Drawer -->
+  <div class="cart-overlay" id="cartOverlay" onclick="toggleCartDrawer()"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <h2>Your Cart</h2>
+      <button class="close-drawer" onclick="toggleCartDrawer()">&#10005;</button>
+    </div>
+    <div class="cart-drawer-body" id="cartDrawerItems"></div>
+    <div class="cart-drawer-footer" id="cartDrawerSummary"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    let currentStep = 1;
+    let answers = {1: '', 2: '', 3: ''};
+
+    function selectOption(step, value) {
+      answers[step] = value;
+      const options = document.querySelectorAll(`#step${step} .quiz-option`);
+      options.forEach(opt => opt.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+      document.getElementById('nextBtn').style.display = 'inline-block';
+      if(step === 3) {
+        document.getElementById('nextBtn').textContent = 'Reveal My Scent';
+      }
+    }
+
+    async function nextStep() {
+      if (currentStep < 3) {
+        document.getElementById(`step${currentStep}`).classList.remove('active');
+        currentStep++;
+        document.getElementById(`step${currentStep}`).classList.add('active');
+        document.getElementById('nextBtn').style.display = 'none';
+      } else {
+        document.getElementById('quizFlow').style.display = 'none';
+        document.getElementById('quizResults').style.display = 'block';
+        showResults();
+      }
+    }
+
+    async function showResults() {
+      const allProducts = await getProducts();
+      // Simple recommendation logic
+      let matched = allProducts.filter(p => {
+        const matchesNote = p.notes.includes(answers[1]) || (answers[1] === 'oriental' && p.notes === 'spicy');
+        return matchesNote;
+      });
+      if(matched.length === 0) matched = allProducts.slice(0, 2); // Fallback
+      else if(matched.length > 2) matched = matched.slice(0, 2);
+      
+      renderProducts('quizProductsGrid', matched);
+    }
+  </script>
+</body>
+</html>

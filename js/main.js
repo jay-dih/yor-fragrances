@@ -79,48 +79,56 @@ function renderProducts(gridId, products) {
   `).join('');
 }
 
-// ---- PRODUCT DETAIL MODAL ----
-let detailQty = 1;
-
-async function openProductDetail(id) {
+// ---- PRODUCT QUICK VIEW MODAL ----
+async function openQuickView(id) {
   const products = await getProducts();
   const p = products.find(pr => pr.id === id);
   if (!p) return;
-  detailQty = 1;
-
-  let overlay = document.getElementById('productDetailOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'productDetailOverlay';
-    overlay.className = 'product-detail-overlay';
-    overlay.onclick = (e) => { if (e.target === overlay) closeProductDetail(); };
-    document.body.appendChild(overlay);
+  
+  document.getElementById('qvImage').src = p.image;
+  document.getElementById('qvCategory').textContent = p.category + "'S";
+  document.getElementById('qvTitle').textContent = p.name;
+  document.getElementById('qvPrice').textContent = `₱${p.price.toLocaleString()}.00`;
+  document.getElementById('qvDesc').textContent = p.description || 'A uniquely crafted YOR original fragrance.';
+  document.getElementById('qvNotes').textContent = p.notes || 'Blend';
+  
+  const addBtn = document.getElementById('qvAddBtn');
+  addBtn.onclick = () => {
+    addToCart(p.id, 1);
+    closeQuickView();
+  };
+  
+  const wlBtn = document.getElementById('qvWishlistBtn');
+  wlBtn.onclick = () => toggleWishlist(p.id, wlBtn);
+  
+  // Check wishlist status
+  const inWishlist = await checkWishlistStatus(p.id);
+  if(inWishlist) wlBtn.classList.add('active');
+  else wlBtn.classList.remove('active');
+  
+  // Fetch Reviews
+  const revRes = await apiFetch(`reviews.php?product_id=${p.id}`);
+  let reviewHtml = '';
+  if(revRes && revRes.success && revRes.reviews.length > 0) {
+    const avg = revRes.reviews.reduce((s, r) => s + parseInt(r.rating), 0) / revRes.reviews.length;
+    reviewHtml = `★`.repeat(Math.round(avg)) + `☆`.repeat(5 - Math.round(avg)) + 
+      ` <span style="color:var(--text-light); font-size:0.8rem;">(${revRes.reviews.length} Reviews)</span>`;
+  } else {
+    reviewHtml = `★★★★★ <span style="color:var(--text-light); font-size:0.8rem;">(0 Reviews)</span>`;
   }
-  overlay.innerHTML = `
-    <div class="product-detail">
-      <div class="product-detail-img">
-        <img src="${p.image}" alt="${p.name}" onerror="this.src=''; this.style.background='var(--sand-light)'"/>
-      </div>
-      <div class="product-detail-info" style="position:relative;">
-        <button class="close-detail" onclick="closeProductDetail()">&#10005;</button>
-        <p class="detail-cat">${p.category.toUpperCase()}'S</p>
-        <h2>${p.name}</h2>
-        <p class="detail-price">₱${p.price.toLocaleString()}.00</p>
-        <p class="detail-desc">${p.description || 'A uniquely crafted YOR original fragrance.'}</p>
-        <p class="detail-stock">${p.stock > 0 ? `${p.stock} in stock` : 'Out of stock'}</p>
-        <div class="detail-actions">
-          <div class="detail-qty-row">
-            <button onclick="changeDetailQty(-1)">−</button>
-            <span id="detailQty">1</span>
-            <button onclick="changeDetailQty(1)">+</button>
-          </div>
-          <button class="btn-add-cart" onclick="addToCart(${p.id}, detailQty); closeProductDetail()">Add to Cart</button>
-          <button class="btn-inquire" onclick="inquireProduct('${p.name}')">Send Inquiry</button>
-        </div>
-      </div>
-    </div>
-  `;
-  overlay.classList.add('open');
+  document.getElementById('qvRating').innerHTML = reviewHtml;
+  
+  document.getElementById('qvModal')?.classList.add('open');
+}
+
+function closeQuickView() {
+  document.getElementById('qvModal')?.classList.remove('open');
+}
+
+// Keep old openProductDetail for backward compatibility or routing to a detail page if needed,
+// but for shop.html we'll swap the click handler to openQuickView.
+function openProductDetail(id) {
+  openQuickView(id);
 }
 
 function changeDetailQty(delta) {
@@ -134,6 +142,15 @@ function closeProductDetail() {
 }
 
 // ---- CART ----
+function toggleCartDrawer(e) {
+  if (e) e.preventDefault();
+  document.getElementById('cartDrawer')?.classList.toggle('open');
+  document.getElementById('cartOverlay')?.classList.toggle('open');
+  if (document.getElementById('cartDrawer')?.classList.contains('open')) {
+    renderCart(); // Re-render when opening
+  }
+}
+
 async function addToCart(productId, qty = 1) {
   const products = await getProducts();
   const p = products.find(pr => pr.id === productId);
@@ -148,17 +165,23 @@ async function addToCart(productId, qty = 1) {
   }
   saveCart(cart);
   updateCartCount();
+  renderCart(); // Update drawer
   showToast(`"${p.name}" added to cart`);
+  
+  // Auto-open drawer on add
+  if (!document.getElementById('cartDrawer')?.classList.contains('open')) {
+    toggleCartDrawer();
+  }
 }
 
 function renderCart() {
   const cart = getCart();
-  const itemsEl = document.getElementById('cartItems');
-  const summaryEl = document.getElementById('cartSummary');
+  const itemsEl = document.getElementById('cartDrawerItems') || document.getElementById('cartItems');
+  const summaryEl = document.getElementById('cartDrawerSummary') || document.getElementById('cartSummary');
   if (!itemsEl || !summaryEl) return;
 
   if (cart.length === 0) {
-    itemsEl.innerHTML = `<div class="cart-empty"><p>Your cart is empty.</p><a href="shop.html">← Continue Shopping</a></div>`;
+    itemsEl.innerHTML = `<div class="cart-empty"><p style="color:var(--text-light); text-align:center; margin-top:40px;">Your cart is empty.</p></div>`;
     summaryEl.innerHTML = '';
     return;
   }
@@ -177,23 +200,23 @@ function renderCart() {
     const isChecked = item.selected !== false;
     if (isChecked) subtotal += item.price * item.qty;
     return `
-      <div class="cart-item">
-        <div style="display:flex; align-items:center; justify-content:center;">
+      <div class="cart-item" style="padding:16px 0; border-bottom:1px solid var(--sand-light);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
           <input type="checkbox" class="custom-checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCartSelection(${item.id})" />
-        </div>
-        <img src="${item.image}" alt="${item.name}" onerror="this.src=''; this.style.background='var(--sand-light)'"/>
-        <div class="cart-item-info">
-          <h4>${item.name}</h4>
-          <p>₱${item.price.toLocaleString()}.00 each</p>
-          <div class="cart-item-qty">
-            <button onclick="updateCartQty(${item.id}, -1)">−</button>
-            <span>${item.qty}</span>
-            <button onclick="updateCartQty(${item.id}, 1)">+</button>
+          <img src="${item.image}" alt="${item.name}" style="width:60px; height:60px; object-fit:contain; background:var(--cream); border-radius:4px;" onerror="this.src=''; this.style.background='var(--sand-light)'"/>
+          <div class="cart-item-info" style="flex:1;">
+            <h4 style="font-size:0.9rem; margin-bottom:4px;">${item.name}</h4>
+            <p style="font-size:0.8rem; color:var(--text-light);">₱${item.price.toLocaleString()}.00</p>
           </div>
-        </div>
-        <div>
-          <p class="cart-item-price">₱${(item.price * item.qty).toLocaleString()}.00</p>
-          <button class="cart-item-remove" onclick="removeFromCart(${item.id})">Remove</button>
+          <div style="text-align:right;">
+            <p style="font-weight:500; font-size:0.95rem; margin-bottom:8px;">₱${(item.price * item.qty).toLocaleString()}.00</p>
+            <div class="cart-item-qty" style="display:inline-flex; border:1px solid var(--sand); border-radius:4px; overflow:hidden;">
+              <button style="border:none; background:none; padding:4px 8px;" onclick="updateCartQty(${item.id}, -1)">−</button>
+              <span style="padding:4px 8px; font-size:0.85rem;">${item.qty}</span>
+              <button style="border:none; background:none; padding:4px 8px;" onclick="updateCartQty(${item.id}, 1)">+</button>
+            </div>
+            <button style="display:block; border:none; background:none; color:red; font-size:0.75rem; margin-top:8px; cursor:pointer;" onclick="removeFromCart(${item.id})">Remove</button>
+          </div>
         </div>
       </div>
     `;
@@ -203,12 +226,12 @@ function renderCart() {
 
   const shipping = subtotal > 1500 || subtotal === 0 ? 0 : 100;
   summaryEl.innerHTML = `
-    <h3>Order Summary</h3>
-    <div class="summary-row"><span>Subtotal</span><span>₱${subtotal.toLocaleString()}.00</span></div>
-    <div class="summary-row"><span>Shipping</span><span>${shipping === 0 ? 'Free' : '₱' + shipping}</span></div>
-    <div class="summary-row total"><span>Total</span><span>₱${(subtotal + shipping).toLocaleString()}.00</span></div>
-    <button class="checkout-btn" onclick="checkout()">Place Order</button>
-    <a href="shop.html" class="continue-shopping">← Continue Shopping</a>
+    <div style="margin-bottom:16px;">
+      <div class="summary-row" style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem; color:var(--text-light);"><span>Subtotal</span><span>₱${subtotal.toLocaleString()}.00</span></div>
+      <div class="summary-row" style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem; color:var(--text-light);"><span>Shipping</span><span>${shipping === 0 ? 'Free' : '₱' + shipping}</span></div>
+      <div class="summary-row total" style="display:flex; justify-content:space-between; margin-top:16px; padding-top:16px; border-top:1px solid var(--sand); font-weight:500; font-size:1.1rem; color:var(--dark);"><span>Total</span><span>₱${(subtotal + shipping).toLocaleString()}.00</span></div>
+    </div>
+    <button class="btn-primary" style="width:100%;" onclick="checkout()">Secure Checkout</button>
   `;
 }
 
@@ -433,6 +456,36 @@ function logoutUser() {
   setTimeout(() => window.location.href = 'index.html', 600);
 }
 
+// ---- WISHLIST API ----
+async function checkWishlistStatus(productId) {
+  const user = getCurrentUser();
+  if(!user) return false;
+  const res = await apiFetch('wishlist.php');
+  if(res && res.success) {
+    return res.wishlist.some(item => item.id == productId);
+  }
+  return false;
+}
+
+async function toggleWishlist(productId, btn) {
+  const user = getCurrentUser();
+  if(!user) {
+    showToast('Please log in to save to wishlist.');
+    return;
+  }
+  const isActive = btn.classList.contains('active');
+  const res = await apiFetch('wishlist.php', {
+    method: isActive ? 'DELETE' : 'POST',
+    body: JSON.stringify({ product_id: productId })
+  });
+  if(res && res.success) {
+    btn.classList.toggle('active');
+    showToast(isActive ? 'Removed from wishlist' : 'Added to wishlist');
+  } else {
+    showToast('Wishlist action failed.');
+  }
+}
+
 // ---- INQUIRE ----
 function inquireProduct(name) {
   window.location.href = `index.html#contact`;
@@ -484,12 +537,13 @@ const observerOptions = {
 const observer = new IntersectionObserver((entries, observer) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
-      entry.target.classList.add('fade-in-visible');
+      entry.target.classList.add('visible'); // For reveal-up
+      entry.target.classList.add('fade-in-visible'); // For legacy fade-in
       observer.unobserve(entry.target);
     }
   });
 }, observerOptions);
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  document.querySelectorAll('.fade-in, .reveal-up').forEach(el => observer.observe(el));
 });
