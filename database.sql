@@ -24,11 +24,16 @@ CREATE TABLE IF NOT EXISTS `products` (
 
 CREATE TABLE IF NOT EXISTS `orders` (
   `id` VARCHAR(20) PRIMARY KEY,
+  `user_id` INT,
   `customer_name` VARCHAR(100) NOT NULL,
   `items_summary` TEXT NOT NULL,
   `total` DECIMAL(10, 2) NOT NULL,
-  `status` ENUM('Pending', 'Confirmed', 'Shipped', 'Completed', 'Cancelled') DEFAULT 'Pending',
-  `order_date` DATE NOT NULL
+  `payment_method` ENUM('COD', 'GCash') DEFAULT 'COD',
+  `payment_receipt` VARCHAR(255),
+  `admin_remarks` TEXT,
+  `status` ENUM('Pending', 'Confirmed', 'Shipped', 'Completed', 'Cancelled', 'Rejected') DEFAULT 'Pending',
+  `order_date` DATE NOT NULL,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS `inquiries` (
