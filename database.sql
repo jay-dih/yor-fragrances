@@ -68,3 +68,24 @@ INSERT IGNORE INTO `orders` (`id`, `customer_name`, `items_summary`, `total`, `s
 ('ORD-001', 'Sample User', 'Rose Velvet x1, White Musk x2', 1950, 'Pending', '2025-06-01'),
 ('ORD-002', 'Guest', 'Ocean Noir x1', 950, 'Confirmed', '2025-06-03'),
 ('ORD-003', 'Sample User', 'Midnight Oud x1', 1400, 'Confirmed', '2025-06-04');
+
+CREATE TABLE IF NOT EXISTS `wishlist` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `product_id` INT NOT NULL,
+  `added_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `user_product` (`user_id`, `product_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS `reviews` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `product_id` INT NOT NULL,
+  `user_id` INT NOT NULL,
+  `rating` INT NOT NULL CHECK (`rating` >= 1 AND `rating` <= 5),
+  `comment` TEXT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);

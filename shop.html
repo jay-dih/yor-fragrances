@@ -26,7 +26,7 @@
         <input type="text" placeholder="Search fragrances..." id="searchInput" oninput="handleSearch(this.value)" onfocus="showSearchDropdown()" onblur="hideSearchDropdown()"/>
         <div class="search-dropdown" id="searchDropdown"></div>
       </div>
-      <a href="cart.html" class="nav-icon" title="Cart">
+      <a href="#" class="nav-icon" title="Cart" onclick="toggleCartDrawer(event)">
         &#128722;
         <span class="cart-count" id="cartCount">0</span>
       </a>
@@ -63,10 +63,13 @@
         <button class="cat-tab" onclick="filterCategory('men', this)">MEN'S</button>
         <button class="cat-tab" onclick="filterCategory('unisex', this)">UNISEX</button>
       </div>
-      <button class="filter-btn" onclick="toggleFilterPanel()">&#9776; Filters</button>
+      <button class="filter-btn" onclick="toggleMobileFilter()" style="display:none;">&#9776; Filters</button>
     </div>
 
-    <div class="filter-panel" id="filterPanel">
+    <div class="shop-layout">
+      <!-- Sticky Sidebar Filter -->
+      <div class="filter-panel" id="filterPanel">
+        <h3 style="font-family:var(--font-display); margin-bottom:10px; font-weight:400;">Refine Selection</h3>
       <div class="filter-group">
         <label>Price Range</label>
         <select id="priceFilter" onchange="applyFilters()">
@@ -103,9 +106,15 @@
       </div>
     </div>
 
-    <div class="products-grid" id="productsGrid"></div>
-    <div class="load-more-wrap">
-      <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">LOAD MORE</button>
+      </div>
+
+      <!-- Products Area -->
+      <div>
+        <div class="products-grid" id="productsGrid"></div>
+        <div class="load-more-wrap">
+          <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">LOAD MORE</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -145,6 +154,45 @@
   </footer>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Cart Drawer -->
+  <div class="cart-overlay" id="cartOverlay" onclick="toggleCartDrawer()"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <h2>Your Cart</h2>
+      <button class="close-drawer" onclick="toggleCartDrawer()">&#10005;</button>
+    </div>
+    <div class="cart-drawer-body" id="cartDrawerItems">
+      <!-- Items render here -->
+    </div>
+    <div class="cart-drawer-footer" id="cartDrawerSummary">
+      <!-- Summary renders here -->
+    </div>
+  </div>
+
+  <!-- Quick View Modal -->
+  <div class="qv-modal" id="qvModal" onclick="closeQuickView(event)">
+    <div class="qv-content" onclick="event.stopPropagation()">
+      <button class="qv-close" onclick="closeQuickView()">&#10005;</button>
+      <div class="qv-image">
+        <img id="qvImage" src="" alt="Product">
+      </div>
+      <div class="qv-details">
+        <span class="qv-category" id="qvCategory">Category</span>
+        <h2 class="qv-title" id="qvTitle">Product Name</h2>
+        <div class="star-rating" id="qvRating">
+          ★★★★★ <span style="color:var(--text-light); font-size:0.8rem;">(4 Reviews)</span>
+        </div>
+        <div class="qv-price" id="qvPrice">₱0.00</div>
+        <p class="qv-desc" id="qvDesc">Description</p>
+        <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:20px;">Scent Notes: <strong id="qvNotes" style="color:var(--dark);">None</strong></p>
+        <div class="qv-actions">
+          <button class="btn-primary" style="flex:1;" id="qvAddBtn">Add to Cart</button>
+          <button class="btn-wishlist" id="qvWishlistBtn">&#9825;</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="js/data.js"></script>
   <script src="js/main.js"></script>
