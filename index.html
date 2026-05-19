@@ -15,19 +15,27 @@
     <!-- NAV -->
     <nav class="navbar" id="navbar">
       <button class="nav-menu-btn" onclick="toggleMobileMenu()">&#9776;</button>
-      <div class="nav-search">
-        <input
-          type="text"
-          placeholder="Search fragrances..."
-          id="searchInput"
-          oninput="handleSearch(this.value)"
-          onfocus="showSearchDropdown()"
-          onblur="hideSearchDropdown()"
-        />
-        <div class="search-dropdown" id="searchDropdown"></div>
-      </div>
       <a href="index.html" class="nav-logo">YOR Fragrances</a>
+      
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop Perfumes</a>
+        <a href="index.html#about">Our Story</a>
+        <a href="index.html#contact">Contact</a>
+      </div>
+
       <div class="nav-actions">
+        <div class="nav-search">
+          <input
+            type="text"
+            placeholder="Search fragrances..."
+            id="searchInput"
+            oninput="handleSearch(this.value)"
+            onfocus="showSearchDropdown()"
+            onblur="hideSearchDropdown()"
+          />
+          <div class="search-dropdown" id="searchDropdown"></div>
+        </div>
         <a href="cart.html" class="nav-icon" title="Cart">
           &#128722;
           <span class="cart-count" id="cartCount">0</span>
