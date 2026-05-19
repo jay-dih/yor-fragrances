@@ -1480,8 +1480,10 @@ textarea {
 }
 .modal {
   background: white;
-  width: 580px;
+  width: 520px;
   max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
   border-radius: 6px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);

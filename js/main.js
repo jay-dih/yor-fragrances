@@ -303,10 +303,10 @@ function ensurePaymentModal() {
           </label>
         </div>
         <div id="gcashFlow" style="display:none;">
-          <div style="border:1px solid var(--sand-light); border-radius:8px; padding:20px; text-align:center; margin-bottom:20px;">
-            <p style="font-size:0.9rem; color:var(--text-light); margin-bottom:12px;">Scan this QR code using your GCash app to send payment.</p>
-            <img src="assets/images/gcash-qr.png" alt="GCash QR Code" style="max-width:220px; width:100%; border-radius:8px; box-shadow:var(--shadow); margin-bottom:12px;"/>
-            <p style="font-size:0.85rem; color:var(--text-light);">After payment, take a <strong>screenshot of your receipt</strong> and upload it below.</p>
+          <div style="border:1px solid var(--sand-light); border-radius:8px; padding:16px; text-align:center; margin-bottom:16px;">
+            <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:10px;">Scan this QR code using your GCash app to send payment.</p>
+            <img src="assets/images/gcash-qr.png" alt="GCash QR Code" style="max-width:160px; width:100%; border-radius:6px; box-shadow:var(--shadow); margin-bottom:10px;"/>
+            <p style="font-size:0.82rem; color:var(--text-light);">After payment, take a <strong>screenshot of your receipt</strong> and upload it below.</p>
           </div>
           <div class="upload-area" id="uploadArea" onclick="document.getElementById('receiptUpload').click()">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--accent); margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -346,6 +346,9 @@ function checkout() {
   _checkoutItems = cart.filter(i => i.selected !== false);
   if (_checkoutItems.length === 0) { showToast('Please select at least one item.'); return; }
 
+  // Close cart drawer if open
+  document.getElementById('cartDrawer')?.classList.remove('open');
+  document.getElementById('cartOverlay')?.classList.remove('open');
 
   // Build summary
   const total = _checkoutItems.reduce((s, i) => s + i.price * i.qty, 0);
@@ -418,12 +421,14 @@ async function confirmPayment() {
     fd.append('payment_method', 'GCash');
     fd.append('date', date);
     fd.append('receipt', fileInput.files[0]);
-    res = await fetch('api/orders.php', { method: 'POST', body: fd }).then(r => r.json()).catch(() => null);
+    // Use apiFetch-compatible approach: build URL using API_BASE
+    res = await fetch(API_BASE + 'orders.php', { method: 'POST', body: fd }).then(r => r.json()).catch(() => null);
   } else {
     const address = document.getElementById('deliveryAddress')?.value.trim();
     if (!address) { showToast('Please enter a delivery address.'); if (btn) { btn.disabled = false; btn.textContent = 'Place Order'; } return; }
     res = await apiFetch('orders.php', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: orderId, customer: user.name, items: itemsStr, total, payment_method: 'COD', date })
     });
   }
