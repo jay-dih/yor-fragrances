@@ -70,9 +70,14 @@
       const user = getCurrentUser();
       if (!user) { window.location.href = 'login.html'; return; }
 
-      const res = await apiFetch('user_orders.php');
+      // Pass user_id (if available) and name so the server can find the right orders
+      const params = new URLSearchParams();
+      if (user.id) params.append('user_id', user.id);
+      params.append('name', user.name);
+
+      const res = await apiFetch('user_orders.php?' + params.toString());
       const tbody = document.getElementById('ordersBody');
-      if (!res || !res.success || res.orders.length === 0) {
+      if (!res || !res.success || !res.orders || res.orders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-light);">You have no orders yet. <a href="shop.html" style="color:var(--accent);">Start shopping!</a></td></tr>';
         return;
       }

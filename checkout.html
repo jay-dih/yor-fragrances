@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout – YOR Fragrances</title>
+  <link rel="icon" type="image/png" href="assets/images/uploaded_img5.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .checkout-page { padding: 110px 20px 80px; max-width: 680px; margin: 0 auto; }
+    .checkout-page h1 { font-family: var(--font-display); font-size: 2.4rem; font-weight: 300; margin-bottom: 6px; }
+    .checkout-page .subtitle { color: var(--text-light); font-size: 0.9rem; margin-bottom: 36px; }
+
+    .checkout-summary {
+      background: var(--cream); border-radius: 8px; padding: 20px 24px;
+      margin-bottom: 30px; font-size: 0.92rem;
+    }
+    .checkout-summary .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e8e0d4; }
+    .checkout-summary .row:last-child { border-bottom: none; font-weight: 600; font-size: 1rem; padding-top: 12px; margin-top: 4px; }
+
+    .payment-methods { display: flex; gap: 14px; margin-bottom: 28px; }
+    .pm-card {
+      flex: 1; display: flex; align-items: center; gap: 14px;
+      padding: 18px 20px; border: 2px solid var(--sand-light);
+      border-radius: 10px; cursor: pointer; transition: all 0.2s;
+      background: white;
+    }
+    .pm-card:hover { border-color: var(--accent); }
+    .pm-card.selected { border-color: var(--accent); background: #faf6f0; }
+    .pm-card .pm-icon { font-size: 1.8rem; }
+    .pm-card .pm-label { font-weight: 500; font-size: 0.95rem; }
+    .pm-card .pm-sub { font-size: 0.78rem; color: var(--text-light); margin-top: 2px; }
+
+    .gcash-section, .cod-section { display: none; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .qr-box {
+      border: 1px solid var(--sand-light); border-radius: 10px;
+      padding: 24px; text-align: center; margin-bottom: 20px; background: white;
+    }
+    .qr-box img { max-width: 180px; width: 100%; border-radius: 8px; margin: 12px 0; }
+    .qr-box p { font-size: 0.85rem; color: var(--text-light); margin: 0; }
+
+    .upload-box {
+      border: 2px dashed var(--sand); border-radius: 10px; padding: 36px 20px;
+      text-align: center; cursor: pointer; transition: all 0.2s;
+    }
+    .upload-box:hover { border-color: var(--accent); background: #faf6f0; }
+    .upload-box svg { color: var(--accent); margin-bottom: 10px; }
+    .upload-box p { margin: 0; font-size: 0.88rem; color: var(--text-light); }
+
+    .receipt-preview { text-align: center; margin-top: 14px; display: none; }
+    .receipt-preview img { max-height: 200px; border-radius: 8px; border: 1px solid var(--sand-light); }
+    .receipt-preview .ok { font-size: 0.82rem; color: #2d7a4a; margin-top: 8px; font-weight: 500; }
+
+    .form-field-co { margin-bottom: 18px; }
+    .form-field-co label { display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-light); margin-bottom: 6px; }
+    .form-field-co input, .form-field-co textarea {
+      width: 100%; box-sizing: border-box;
+      border: 1px solid var(--sand); border-radius: 6px; padding: 12px 14px;
+      font-family: inherit; font-size: 0.9rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-field-co input:focus, .form-field-co textarea:focus { border-color: var(--accent); }
+    .form-field-co textarea { resize: vertical; min-height: 90px; }
+
+    .place-btn {
+      width: 100%; padding: 18px; margin-top: 28px;
+      background: var(--accent); color: white; border: none;
+      font-family: var(--font-body); font-size: 0.9rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      border-radius: 6px; cursor: pointer; transition: background 0.2s;
+    }
+    .place-btn:hover { background: var(--dark); }
+    .place-btn:disabled { background: var(--sand); cursor: not-allowed; }
+
+    .success-screen { display: none; text-align: center; padding: 60px 20px; }
+    .success-screen .check { font-size: 3rem; margin-bottom: 16px; }
+    .success-screen h2 { font-family: var(--font-display); font-size: 2rem; font-weight: 300; margin-bottom: 10px; }
+    .success-screen p { color: var(--text-light); margin-bottom: 28px; }
+  </style>
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <button class="nav-menu-btn" onclick="toggleMobileMenu()">&#9776;</button>
+    <a href="index.html" class="nav-logo">YOR Fragrances</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop Perfumes</a>
+      <a href="index.html#about">Our Story</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <a href="cart.html" class="nav-icon" title="Cart">&#128722;<span class="cart-count" id="cartCount">0</span></a>
+      <div class="nav-user-menu">
+        <span class="nav-icon" onclick="toggleUserMenu()" title="Account">&#128100;</span>
+        <div class="user-dropdown" id="userDropdown"><div id="userDropdownContent"></div></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="checkout-page" id="checkoutPage">
+    <h1>Checkout</h1>
+    <p class="subtitle">Review your order and select a payment method.</p>
+
+    <!-- Order Summary -->
+    <div class="checkout-summary" id="checkoutSummary"></div>
+
+    <!-- Payment Method -->
+    <div style="margin-bottom:14px;">
+      <label style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-light);">Payment Method</label>
+    </div>
+    <div class="payment-methods">
+      <div class="pm-card" id="pmCOD" onclick="selectPM('COD')">
+        <span class="pm-icon">🚗</span>
+        <div>
+          <div class="pm-label">Cash on Delivery</div>
+          <div class="pm-sub">Pay when you receive</div>
+        </div>
+      </div>
+      <div class="pm-card" id="pmGCash" onclick="selectPM('GCash')">
+        <div style="background:#1A75FF; color:white; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; flex-shrink:0;">G</div>
+        <div>
+          <div class="pm-label">GCash</div>
+          <div class="pm-sub">Scan QR &amp; upload receipt</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GCash Flow -->
+    <div class="gcash-section" id="gcashSection">
+      <div class="qr-box">
+        <p>Scan the QR code below using your GCash app:</p>
+        <img src="assets/images/gcash-qr.png" alt="GCash QR Code"/>
+        <p>After sending payment, take a <strong>screenshot of your GCash receipt</strong> and upload it below.</p>
+      </div>
+      <div class="upload-box" id="uploadBox" onclick="document.getElementById('receiptFile').click()">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>Click to upload your GCash receipt screenshot</p>
+        <p style="font-size:0.78rem; margin-top:4px;">JPG or PNG</p>
+      </div>
+      <input type="file" id="receiptFile" accept="image/*" style="display:none;" onchange="onReceiptChosen(this)"/>
+      <div class="receipt-preview" id="receiptPreview">
+        <img id="receiptImg" src="" alt="Receipt"/>
+        <p class="ok">✓ Receipt ready to submit</p>
+      </div>
+    </div>
+
+    <!-- COD Flow -->
+    <div class="cod-section" id="codSection">
+      <div class="form-field-co">
+        <label>Delivery Address</label>
+        <textarea id="deliveryAddr" placeholder="Enter your complete delivery address..."></textarea>
+      </div>
+      <div class="form-field-co">
+        <label>Contact Number</label>
+        <input type="tel" id="contactNum" placeholder="+63 9xx xxx xxxx"/>
+      </div>
+    </div>
+
+    <button class="place-btn" id="placeBtn" onclick="placeOrder()" disabled>
+      Select a Payment Method to Continue
+    </button>
+  </div>
+
+  <!-- Success Screen -->
+  <div class="checkout-page success-screen" id="successScreen">
+    <div class="check">✅</div>
+    <h2>Order Placed!</h2>
+    <p>Thank you for your order. The admin will review and confirm it shortly.<br/>You can track your order status in <strong>My Orders</strong>.</p>
+    <a href="my-orders.html" class="btn-primary" style="display:inline-block; margin-bottom:14px; text-decoration:none;">View My Orders</a><br/>
+    <a href="shop.html" style="color:var(--accent); font-size:0.9rem;">Continue Shopping</a>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    let _items = [];
+    let _pm = null;
+
+    function init() {
+      const user = getCurrentUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+
+      const cart = getCart();
+      _items = cart.filter(i => i.selected !== false);
+      if (_items.length === 0) {
+        document.getElementById('checkoutSummary').innerHTML = '<p style="color:var(--text-light); text-align:center; padding:20px;">Your cart is empty. <a href="shop.html" style="color:var(--accent);">Shop now</a></p>';
+        return;
+      }
+
+      const total = _items.reduce((s, i) => s + i.price * i.qty, 0);
+      document.getElementById('checkoutSummary').innerHTML =
+        _items.map(i => `<div class="row"><span>${i.name} × ${i.qty}</span><span>₱${(i.price * i.qty).toLocaleString()}</span></div>`).join('') +
+        `<div class="row"><span>Total</span><span>₱${total.toLocaleString()}</span></div>`;
+    }
+
+    function selectPM(method) {
+      _pm = method;
+      document.getElementById('pmCOD').classList.toggle('selected', method === 'COD');
+      document.getElementById('pmGCash').classList.toggle('selected', method === 'GCash');
+      document.getElementById('gcashSection').style.display = method === 'GCash' ? 'block' : 'none';
+      document.getElementById('codSection').style.display   = method === 'COD'   ? 'block' : 'none';
+      const btn = document.getElementById('placeBtn');
+      btn.disabled = false;
+      btn.textContent = method === 'GCash' ? 'Upload Receipt & Place Order' : 'Place Order';
+    }
+
+    function onReceiptChosen(input) {
+      if (!input.files.length) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('receiptImg').src = e.target.result;
+        document.getElementById('receiptPreview').style.display = 'block';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+
+    async function placeOrder() {
+      const user = getCurrentUser();
+      if (!user || !_pm) return;
+
+      const btn = document.getElementById('placeBtn');
+      btn.disabled = true; btn.textContent = 'Placing Order…';
+
+      const total   = _items.reduce((s, i) => s + i.price * i.qty, 0);
+      const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+      const date    = new Date().toISOString().split('T')[0];
+      const itemsStr = _items.map(i => `${i.name} x${i.qty}`).join(', ');
+
+      let res = null;
+
+      if (_pm === 'GCash') {
+        const fileInput = document.getElementById('receiptFile');
+        if (!fileInput.files.length) {
+          showToast('Please upload your GCash receipt screenshot first.');
+          btn.disabled = false; btn.textContent = 'Upload Receipt & Place Order';
+          return;
+        }
+        const fd = new FormData();
+        fd.append('id',             orderId);
+        fd.append('user_id',        user.id || '');
+        fd.append('customer',       user.name);
+        fd.append('items',          itemsStr);
+        fd.append('total',          total);
+        fd.append('payment_method', 'GCash');
+        fd.append('date',           date);
+        fd.append('receipt',        fileInput.files[0]);
+        res = await fetch(API_BASE + 'orders.php', { method: 'POST', body: fd })
+                    .then(r => r.json()).catch(() => null);
+      } else {
+        const address = document.getElementById('deliveryAddr').value.trim();
+        if (!address) {
+          showToast('Please enter your delivery address.');
+          btn.disabled = false; btn.textContent = 'Place Order';
+          return;
+        }
+        res = await apiFetch('orders.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: orderId, user_id: user.id || null,
+            customer: user.name, items: itemsStr,
+            total, payment_method: 'COD', date
+          })
+        });
+      }
+
+      if (res && res.success) {
+        // Clear selected items from cart
+        const remaining = getCart().filter(i => i.selected === false);
+        saveCart(remaining);
+        updateCartCount();
+        document.getElementById('checkoutPage').style.display  = 'none';
+        document.getElementById('successScreen').style.display = 'block';
+      } else {
+        showToast('Failed to place order. Please try again.');
+        btn.disabled = false;
+        btn.textContent = _pm === 'GCash' ? 'Upload Receipt & Place Order' : 'Place Order';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

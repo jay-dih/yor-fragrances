@@ -339,40 +339,18 @@ function ensurePaymentModal() {
 }
 
 function checkout() {
-  ensurePaymentModal(); // inject modal into DOM if not already present
   const user = getCurrentUser();
   if (!user) { openCheckoutAuthModal(); return; }
   const cart = getCart();
-  _checkoutItems = cart.filter(i => i.selected !== false);
-  if (_checkoutItems.length === 0) { showToast('Please select at least one item.'); return; }
+  const selected = cart.filter(i => i.selected !== false);
+  if (selected.length === 0) { showToast('Please select at least one item.'); return; }
 
   // Close cart drawer if open
   document.getElementById('cartDrawer')?.classList.remove('open');
   document.getElementById('cartOverlay')?.classList.remove('open');
 
-  // Build summary
-  const total = _checkoutItems.reduce((s, i) => s + i.price * i.qty, 0);
-  const summaryEl = document.getElementById('paymentSummary');
-  if (summaryEl) {
-    summaryEl.innerHTML = _checkoutItems.map(i =>
-      `<div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-        <span>${i.name} × ${i.qty}</span><span>₱${(i.price * i.qty).toLocaleString()}</span>
-      </div>`
-    ).join('') + `<div style="border-top:1px solid var(--sand);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;font-weight:500;">
-      <span>Total</span><span>₱${total.toLocaleString()}</span></div>`;
-  }
-
-  _selectedPayment = null;
-  document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
-  const gcash = document.getElementById('gcashFlow');
-  const cod   = document.getElementById('codFlow');
-  const btn   = document.getElementById('confirmPaymentBtn');
-  if (gcash) gcash.style.display = 'none';
-  if (cod) cod.style.display = 'none';
-  if (btn) btn.style.display = 'none';
-
-  const modal = document.getElementById('paymentModal');
-  if (modal) modal.classList.add('open');
+  // Navigate to the dedicated checkout page
+  window.location.href = 'checkout.html';
 }
 
 function selectPayment(method) {
