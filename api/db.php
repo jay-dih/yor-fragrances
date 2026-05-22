@@ -25,4 +25,13 @@ try {
 function getJsonInput() {
     return json_decode(file_get_contents('php://input'), true);
 }
-?>
+
+// API endpoint to fetch location suggestions
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['search'])) {
+    $search = $_GET['search'];
+    $stmt = $pdo->prepare("SELECT DISTINCT address FROM locations WHERE address LIKE :search LIMIT 10");
+    $stmt->execute(['search' => "%$search%"]);
+    $results = $stmt->fetchAll();
+    echo json_encode($results);
+    exit;
+}

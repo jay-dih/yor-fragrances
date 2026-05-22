@@ -44,6 +44,23 @@ if ($method === 'GET') {
         $imagePath = $data['image'] ?? $imagePath;
     }
 
+    if (!empty($data['id'])) {
+        $stmt = $pdo->prepare("UPDATE products SET name=?, category=?, notes=?, price=?, stock=?, featured=?, description=?, image=? WHERE id=?");
+        $stmt->execute([
+            $data['name'],
+            $data['category'],
+            $data['notes'] ?? null,
+            $data['price'],
+            $data['stock'],
+            !empty($data['featured']) ? 1 : 0,
+            $data['description'] ?? '',
+            $imagePath,
+            $data['id']
+        ]);
+        echo json_encode(["success" => true]);
+        exit;
+    }
+
     $stmt = $pdo->prepare("INSERT INTO products (name, category, notes, price, stock, featured, description, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
         $data['name'],

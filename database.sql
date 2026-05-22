@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `total` DECIMAL(10, 2) NOT NULL,
   `payment_method` ENUM('COD', 'GCash') DEFAULT 'COD',
   `payment_receipt` VARCHAR(255),
+  `address` TEXT,
   `admin_remarks` TEXT,
   `status` ENUM('Pending', 'Confirmed', 'Shipped', 'Completed', 'Cancelled', 'Rejected') DEFAULT 'Pending',
   `order_date` DATE NOT NULL,

@@ -1,107 +1,165 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Orders – YOR Fragrances</title>
-  <link rel="icon" type="image/png" href="assets/images/uploaded_img5.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css"/>
-</head>
-<body>
-
-  <nav class="navbar" id="navbar">
-    <button class="nav-menu-btn" onclick="toggleMobileMenu()">&#9776;</button>
-    <a href="index.html" class="nav-logo">YOR Fragrances</a>
-    <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="shop.html">Shop Perfumes</a>
-      <a href="index.html#about">Our Story</a>
-      <a href="index.html#contact">Contact</a>
-    </div>
-    <div class="nav-actions">
-      <div class="nav-search">
-        <input type="text" placeholder="Search fragrances..." id="searchInput" oninput="handleSearch(this.value)" onfocus="showSearchDropdown()" onblur="hideSearchDropdown()"/>
-        <div class="search-dropdown" id="searchDropdown"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Orders – YOR Fragrances</title>
+    <link rel="icon" type="image/png" href="assets/images/uploaded_img5.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <nav class="navbar" id="navbar">
+      <button class="nav-menu-btn" onclick="toggleMobileMenu()">&#9776;</button>
+      <a href="index.html" class="nav-logo">YOR Fragrances</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop Perfumes</a>
+        <a href="index.html#about">Our Story</a>
+        <a href="index.html#contact">Contact</a>
       </div>
-      <a href="cart.html" class="nav-icon" title="Cart">
-        &#128722;
-        <span class="cart-count" id="cartCount">0</span>
-      </a>
-      <div class="nav-user-menu">
-        <span class="nav-icon" onclick="toggleUserMenu()" title="Account">&#128100;</span>
-        <div class="user-dropdown" id="userDropdown">
-          <div id="userDropdownContent"></div>
+      <div class="nav-actions">
+        <div class="nav-search">
+          <input
+            type="text"
+            placeholder="Search fragrances..."
+            id="searchInput"
+            oninput="handleSearch(this.value)"
+            onfocus="showSearchDropdown()"
+            onblur="hideSearchDropdown()"
+          />
+          <div class="search-dropdown" id="searchDropdown"></div>
+        </div>
+        <a href="cart.html" class="nav-icon" title="Cart">
+          &#128722;
+          <span class="cart-count" id="cartCount">0</span>
+        </a>
+        <div class="nav-user-menu">
+          <span class="nav-icon" onclick="toggleUserMenu()" title="Account"
+            >&#128100;</span
+          >
+          <div class="user-dropdown" id="userDropdown">
+            <div id="userDropdownContent"></div>
+          </div>
         </div>
       </div>
-    </div>
-  </nav>
+    </nav>
 
-  <section class="my-orders-section">
-    <h1>My Orders</h1>
-    <p style="color:var(--text-light); font-size:0.95rem;">Track the status of your orders. The admin will update the status and may add remarks for your reference.</p>
+    <section class="my-orders-section">
+      <h1>My Orders</h1>
+      <p style="color: var(--text-light); font-size: 0.95rem">
+        Track the status of your orders. The admin will update the status and
+        may add remarks for your reference.
+      </p>
 
-    <div class="orders-table-wrap">
-      <table class="orders-table">
-        <thead>
-          <tr>
-            <th>Order ID</th>
-            <th>Date</th>
-            <th>Items</th>
-            <th>Total</th>
-            <th>Payment</th>
-            <th>Status</th>
-            <th>Remarks</th>
-          </tr>
-        </thead>
-        <tbody id="ordersBody">
-          <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-light);">Loading your orders...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+      <div class="orders-table-wrap">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>ORDER ID</th>
+              <th>DATE</th>
+              <th>DETAILS</th>
+              <!-- Updated from Items to Details -->
+              <th>TOTAL</th>
+              <th>PAYMENT</th>
+              <th>STATUS</th>
+              <th>REMARKS</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody">
+            <tr>
+              <td
+                colspan="7"
+                style="
+                  text-align: center;
+                  padding: 40px;
+                  color: var(--text-light);
+                "
+              >
+                Loading your orders...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-  <div class="toast" id="toast"></div>
-  <script src="js/data.js"></script>
-  <script src="js/main.js"></script>
-  <script>
-    async function loadMyOrders() {
-      const user = getCurrentUser();
-      if (!user) { window.location.href = 'login.html'; return; }
+    <div class="toast" id="toast"></div>
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+      async function loadMyOrders() {
+        const user = getCurrentUser();
+        if (!user) {
+          window.location.href = "login.html";
+          return;
+        }
 
-      // Pass user_id (if available) and name so the server can find the right orders
-      const params = new URLSearchParams();
-      if (user.id) params.append('user_id', user.id);
-      params.append('name', user.name);
+        // Pass user_id (if available) and name so the server can find the right orders
+        const params = new URLSearchParams();
+        if (user.id) params.append("user_id", user.id);
+        params.append("name", user.name);
 
-      const res = await apiFetch('user_orders.php?' + params.toString());
-      const tbody = document.getElementById('ordersBody');
-      if (!res || !res.success || !res.orders || res.orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-light);">You have no orders yet. <a href="shop.html" style="color:var(--accent);">Start shopping!</a></td></tr>';
-        return;
-      }
-      tbody.innerHTML = res.orders.map(o => `
+        const res = await apiFetch("user_orders.php?" + params.toString());
+        const tbody = document.getElementById("ordersBody");
+        if (!res || !res.success || !res.orders || res.orders.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-light);">You have no orders yet. <a href="shop.html" style="color:var(--accent);">Start shopping!</a></td></tr>';
+          return;
+        }
+
+        // Update cached state to mark notifications as read
+        const orderStates = {};
+        res.orders.forEach((o) => {
+          orderStates[o.id] = {
+            status: o.status,
+            remarks: o.admin_remarks || "",
+          };
+        });
+        localStorage.setItem(
+          "customer_orders_state",
+          JSON.stringify(orderStates),
+        );
+
+        // Clear customer notification badges
+        const navBadge = document.getElementById("userNavBadge");
+        if (navBadge) navBadge.style.display = "none";
+        const ordersBadge = document.getElementById("my-orders-badge");
+        if (ordersBadge) ordersBadge.style.display = "none";
+
+        tbody.innerHTML = res.orders
+          .map(
+            (o) => `
         <tr>
           <td><strong>${o.id}</strong></td>
           <td>${o.order_date}</td>
           <td style="max-width:220px; word-break:break-word;">${o.items_summary}</td>
           <td>₱${parseFloat(o.total).toLocaleString()}</td>
           <td>
-            ${o.payment_method === 'GCash'
-              ? '<span style="color:#1A75FF; font-weight:500;">💳 GCash</span>'
-              : '🚗 Cash on Delivery'}
+            ${
+              o.payment_method === "GCash"
+                ? '<span style="color:#1A75FF; font-weight:500;">💳 GCash</span>'
+                : "🚗 Cash on Delivery"
+            }
           </td>
           <td><span class="status-badge status-${o.status}">${o.status}</span></td>
           <td>
-            ${o.admin_remarks
-              ? `<div class="order-remarks">📝 ${o.admin_remarks}</div>`
-              : '<span style="color:var(--text-light); font-size:0.85rem;">—</span>'}
+            ${
+              o.admin_remarks
+                ? `<div class="order-remarks">📝 ${o.admin_remarks}</div>`
+                : '<span style="color:var(--text-light); font-size:0.85rem;">—</span>'
+            }
           </td>
         </tr>
-      `).join('');
-    }
-    loadMyOrders();
-  </script>
-</body>
+      `,
+          )
+          .join("");
+      }
+      loadMyOrders();
+    </script>
+  </body>
 </html>

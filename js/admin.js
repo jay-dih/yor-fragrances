@@ -15,6 +15,43 @@ function showAdminTab(tab, btn) {
   if (tab === "users") renderUsersTable();
   if (tab === "dashboard") renderDashboard();
   if (tab === "inquiries") renderInquiriesTable();
+
+  // Clear badges when clicking the corresponding tab
+  if (tab === "orders") {
+    const badge = document.getElementById("badge-orders");
+    if (badge) badge.style.display = "none";
+    apiFetch("orders.php").then((res) => {
+      const orders = res && res.orders ? res.orders : [];
+      if (orders.length > 0) {
+        const maxOrderId = Math.max(
+          ...orders.map((o) => parseInt(o.id.replace(/\D/g, "")) || 0),
+        );
+        localStorage.setItem("admin_last_viewed_order_id", maxOrderId);
+      }
+    });
+  }
+  if (tab === "inquiries") {
+    const badge = document.getElementById("badge-inquiries");
+    if (badge) badge.style.display = "none";
+    getInquiries().then((inquiries) => {
+      if (inquiries.length > 0) {
+        const maxInquiryId = Math.max(
+          ...inquiries.map((i) => parseInt(i.id) || 0),
+        );
+        localStorage.setItem("admin_last_viewed_inquiry_id", maxInquiryId);
+      }
+    });
+  }
+  if (tab === "users") {
+    const badge = document.getElementById("badge-users");
+    if (badge) badge.style.display = "none";
+    getUsers().then((users) => {
+      if (users.length > 0) {
+        const maxUserId = Math.max(...users.map((u) => parseInt(u.id) || 0));
+        localStorage.setItem("admin_last_viewed_user_id", maxUserId);
+      }
+    });
+  }
 }
 
 async function renderDashboard() {
@@ -22,49 +59,67 @@ async function renderDashboard() {
   const orders = await getOrders();
   const users = await getUsers();
 
-  document.getElementById('stat-products').textContent = products.length;
-  document.getElementById('stat-orders').textContent = orders.length;
-  document.getElementById('stat-users').textContent = users.length;
+  document.getElementById("stat-products").textContent = products.length;
+  document.getElementById("stat-orders").textContent = orders.length;
+  document.getElementById("stat-users").textContent = users.length;
 
   // Monthly sales: sum totals for orders this month with status Confirmed/Shipped/Completed
   const now = new Date();
   const thisMonth = now.getMonth();
   const thisYear = now.getFullYear();
-  const monthlyOrders = (orders.orders || orders).filter(o => {
+  const monthlyOrders = (orders.orders || orders).filter((o) => {
     if (!o.order_date) return false;
     const d = new Date(o.order_date);
-    return d.getMonth() === thisMonth && d.getFullYear() === thisYear
-      && ['Confirmed','Shipped','Completed'].includes(o.status);
+    return (
+      d.getMonth() === thisMonth &&
+      d.getFullYear() === thisYear &&
+      ["Confirmed", "Shipped", "Completed"].includes(o.status)
+    );
   });
-  const monthlySales = monthlyOrders.reduce((s, o) => s + parseFloat(o.total || 0), 0);
-  const monthName = now.toLocaleString('default', { month: 'long' });
-  document.getElementById('stat-monthly-sales').textContent = `₱${monthlySales.toLocaleString()}`;
-  document.getElementById('stat-monthly-label').textContent = `${monthName} ${thisYear}`;
+  const monthlySales = monthlyOrders.reduce(
+    (s, o) => s + parseFloat(o.total || 0),
+    0,
+  );
+  const monthName = now.toLocaleString("default", { month: "long" });
+  document.getElementById("stat-monthly-sales").textContent =
+    `₱${monthlySales.toLocaleString()}`;
+  document.getElementById("stat-monthly-label").textContent =
+    `${monthName} ${thisYear}`;
 
   // Category chart
   const cats = { women: 0, men: 0, unisex: 0 };
-  products.forEach(p => { if (cats[p.category] !== undefined) cats[p.category]++; });
+  products.forEach((p) => {
+    if (cats[p.category] !== undefined) cats[p.category]++;
+  });
   const max = Math.max(...Object.values(cats));
-  const chart = document.getElementById('categoryChart');
+  const chart = document.getElementById("categoryChart");
   if (chart) {
-    chart.innerHTML = Object.entries(cats).map(([cat, count]) => `
+    chart.innerHTML = Object.entries(cats)
+      .map(
+        ([cat, count]) => `
       <div class="chart-bar-wrap">
         <span class="chart-bar-val">${count}</span>
         <div class="chart-bar" style="height:${max > 0 ? (count / max) * 80 : 0}px"></div>
         <span class="chart-bar-label">${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
-      </div>`).join('');
+      </div>`,
+      )
+      .join("");
   }
 
   // Top products by lowest stock
   const sorted = [...products].sort((a, b) => a.stock - b.stock).slice(0, 5);
-  const topEl = document.getElementById('topProducts');
+  const topEl = document.getElementById("topProducts");
   if (topEl) {
-    topEl.innerHTML = sorted.map((p, i) => `
+    topEl.innerHTML = sorted
+      .map(
+        (p, i) => `
       <div class="top-product-row">
         <strong>#${i + 1} ${p.name}</strong>
         <span>${p.category} · ₱${p.price.toLocaleString()}</span>
         <span>${p.stock} in stock</span>
-      </div>`).join('');
+      </div>`,
+      )
+      .join("");
   }
 }
 
@@ -93,27 +148,32 @@ async function renderProductsTable() {
 }
 
 async function renderOrdersTable() {
-  const res = await apiFetch('orders.php');
-  const orders = (res && res.orders) ? res.orders : [];
-  const tbody = document.getElementById('ordersTableBody');
+  const res = await apiFetch("orders.php");
+  const orders = res && res.orders ? res.orders : [];
+  const tbody = document.getElementById("ordersTableBody");
   if (!tbody) return;
   if (orders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-light);">No orders yet.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-light);">No orders yet.</td></tr>';
     return;
   }
-  tbody.innerHTML = orders.map(o => `
+  tbody.innerHTML = orders
+    .map(
+      (o) => `
     <tr>
       <td><strong>${o.id}</strong></td>
       <td>${o.customer_name}</td>
       <td style="max-width:180px; font-size:0.8rem;">${o.items_summary}</td>
       <td>₱${parseFloat(o.total).toLocaleString()}</td>
-      <td>${o.payment_method === 'GCash' ? '<span style="color:#1A75FF;font-weight:500;">GCash</span>' : 'COD'}</td>
+      <td>${o.payment_method === "GCash" ? '<span style="color:#1A75FF;font-weight:500;">GCash</span>' : "COD"}</td>
       <td><span class="status-badge status-${o.status}">${o.status}</span></td>
       <td>${o.order_date}</td>
       <td>
         <button class="btn-edit" onclick='openOrderReview(${JSON.stringify(o)})'>Review</button>
       </td>
-    </tr>`).join('');
+    </tr>`,
+    )
+    .join("");
 }
 
 async function renderUsersTable() {
@@ -140,87 +200,95 @@ async function renderUsersTable() {
 
 // ---- PRODUCT MODAL ----
 async function openProductModal(id) {
-  const modal = document.getElementById('productModal');
+  const modal = document.getElementById("productModal");
   if (!modal) return;
   // Reset file input & preview
-  document.getElementById('pImageFile').value = '';
-  document.getElementById('productImagePreview').style.display = 'none';
+  document.getElementById("pImageFile").value = "";
+  document.getElementById("productImagePreview").style.display = "none";
 
   if (id) {
     const products = await getProducts();
-    const p = products.find(pr => pr.id === id);
+    const p = products.find((pr) => pr.id === id);
     if (!p) return;
-    document.getElementById('modalTitle').textContent = 'Edit Product';
-    document.getElementById('editProductId').value = p.id;
-    document.getElementById('pName').value = p.name;
-    document.getElementById('pCategory').value = p.category;
-    document.getElementById('pPrice').value = p.price;
-    document.getElementById('pStock').value = p.stock;
-    document.getElementById('pDesc').value = p.description || '';
-    document.getElementById('pFeatured').checked = p.featured;
+    document.getElementById("modalTitle").textContent = "Edit Product";
+    document.getElementById("editProductId").value = p.id;
+    document.getElementById("pName").value = p.name;
+    document.getElementById("pCategory").value = p.category;
+    document.getElementById("pPrice").value = p.price;
+    document.getElementById("pStock").value = p.stock;
+    document.getElementById("pDesc").value = p.description || "";
+    document.getElementById("pFeatured").checked = p.featured;
     if (p.image) {
-      document.getElementById('currentProductImg').src = p.image;
-      document.getElementById('productImagePreview').style.display = 'block';
+      document.getElementById("currentProductImg").src = p.image;
+      document.getElementById("productImagePreview").style.display = "block";
     }
   } else {
-    document.getElementById('modalTitle').textContent = 'Add Product';
-    document.getElementById('editProductId').value = '';
-    document.querySelector('.modal-form').reset();
+    document.getElementById("modalTitle").textContent = "Add Product";
+    document.getElementById("editProductId").value = "";
+    document.querySelector(".modal-form").reset();
   }
-  modal.classList.add('open');
+  modal.classList.add("open");
 }
 
 function previewProductImage(input) {
   if (!input.files.length) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('currentProductImg').src = e.target.result;
-    document.getElementById('productImagePreview').style.display = 'block';
+  reader.onload = (e) => {
+    document.getElementById("currentProductImg").src = e.target.result;
+    document.getElementById("productImagePreview").style.display = "block";
   };
   reader.readAsDataURL(input.files[0]);
 }
 
 function closeProductModal() {
-  document.getElementById('productModal')?.classList.remove('open');
+  document.getElementById("productModal")?.classList.remove("open");
 }
 
 async function saveProduct(e) {
   e.preventDefault();
-  const editId = document.getElementById('editProductId').value;
-  const fileInput = document.getElementById('pImageFile');
+  const editId = document.getElementById("editProductId").value;
+  const fileInput = document.getElementById("pImageFile");
 
   if (fileInput.files.length > 0) {
     // New image chosen: send as multipart
     const fd = new FormData();
-    fd.append('name', document.getElementById('pName').value.trim());
-    fd.append('category', document.getElementById('pCategory').value);
-    fd.append('price', document.getElementById('pPrice').value);
-    fd.append('stock', document.getElementById('pStock').value);
-    fd.append('description', document.getElementById('pDesc').value.trim());
-    fd.append('featured', document.getElementById('pFeatured').checked ? '1' : '0');
-    fd.append('product_image', fileInput.files[0]);
-    if (editId) fd.append('id', editId);
-    const method = editId ? 'PUT' : 'POST';
-    const res = await fetch(`api/products.php${editId ? '?id=' + editId : ''}`, { method, body: fd }).then(r => r.json()).catch(() => null);
-    if (res && res.success) { showToast(editId ? 'Product updated!' : 'Product added!'); }
-    else showToast('Error saving product');
+    fd.append("name", document.getElementById("pName").value.trim());
+    fd.append("category", document.getElementById("pCategory").value);
+    fd.append("price", document.getElementById("pPrice").value);
+    fd.append("stock", document.getElementById("pStock").value);
+    fd.append("description", document.getElementById("pDesc").value.trim());
+    fd.append(
+      "featured",
+      document.getElementById("pFeatured").checked ? "1" : "0",
+    );
+    fd.append("product_image", fileInput.files[0]);
+    if (editId) fd.append("id", editId);
+    const res = await fetch("api/products.php", {
+      method: "POST",
+      body: fd,
+    })
+      .then((r) => r.json())
+      .catch(() => null);
+    if (res && res.success) {
+      showToast(editId ? "Product updated!" : "Product added!");
+    } else showToast("Error saving product");
   } else {
     // No new image, use JSON
     const data = {
-      name: document.getElementById('pName').value.trim(),
-      category: document.getElementById('pCategory').value,
-      price: Number(document.getElementById('pPrice').value),
-      stock: Number(document.getElementById('pStock').value),
-      description: document.getElementById('pDesc').value.trim(),
-      featured: document.getElementById('pFeatured').checked,
+      name: document.getElementById("pName").value.trim(),
+      category: document.getElementById("pCategory").value,
+      price: Number(document.getElementById("pPrice").value),
+      stock: Number(document.getElementById("pStock").value),
+      description: document.getElementById("pDesc").value.trim(),
+      featured: document.getElementById("pFeatured").checked,
     };
     if (editId) {
       data.id = Number(editId);
       await updateProduct(data);
-      showToast('Product updated!');
+      showToast("Product updated!");
     } else {
       await addProduct(data);
-      showToast('Product added!');
+      showToast("Product added!");
     }
   }
 
@@ -239,53 +307,58 @@ async function deleteProduct(id) {
 
 // ---- ORDER REVIEW MODAL ----
 function openOrderReview(order) {
-  document.getElementById('orderReviewId').value = order.id;
-  document.getElementById('orderReviewStatus').value = order.status;
-  document.getElementById('orderReviewRemarks').value = order.admin_remarks || '';
-  document.getElementById('orderReviewDetails').innerHTML = `
+  document.getElementById("orderReviewId").value = order.id;
+  document.getElementById("orderReviewStatus").value = order.status;
+  document.getElementById("orderReviewRemarks").value =
+    order.admin_remarks || "";
+  document.getElementById("orderReviewDetails").innerHTML = `
     <div style="margin-bottom:8px;"><strong>Order:</strong> ${order.id}</div>
     <div style="margin-bottom:8px;"><strong>Customer:</strong> ${order.customer_name}</div>
     <div style="margin-bottom:8px;"><strong>Items:</strong> ${order.items_summary}</div>
+    ${order.address ? `<div style="margin-bottom:8px; white-space:pre-line;"><strong>Delivery Address:</strong> ${order.address}</div>` : ""}
     <div style="margin-bottom:8px;"><strong>Total:</strong> ₱${parseFloat(order.total).toLocaleString()}</div>
-    <div><strong>Payment:</strong> ${order.payment_method || 'COD'} &nbsp;
+    <div><strong>Payment:</strong> ${order.payment_method || "COD"} &nbsp;
       <span class="status-badge status-${order.status}">${order.status}</span>
     </div>`;
 
-  const receiptSection = document.getElementById('orderReceiptSection');
+  const receiptSection = document.getElementById("orderReceiptSection");
   if (order.payment_receipt) {
-    document.getElementById('orderReceiptImg').src = order.payment_receipt;
-    receiptSection.style.display = 'block';
+    document.getElementById("orderReceiptImg").src = order.payment_receipt;
+    receiptSection.style.display = "block";
   } else {
-    receiptSection.style.display = 'none';
+    receiptSection.style.display = "none";
   }
-  document.getElementById('orderReviewModal').classList.add('open');
+  document.getElementById("orderReviewModal").classList.add("open");
 }
 
 function closeOrderReviewModal() {
-  document.getElementById('orderReviewModal')?.classList.remove('open');
+  document.getElementById("orderReviewModal")?.classList.remove("open");
 }
 
 async function submitOrderReview() {
-  const id = document.getElementById('orderReviewId').value;
-  const status = document.getElementById('orderReviewStatus').value;
-  const remarks = document.getElementById('orderReviewRemarks').value.trim();
-  const res = await apiFetch('orders.php', {
-    method: 'PUT',
-    body: JSON.stringify({ id, status, admin_remarks: remarks })
+  const id = document.getElementById("orderReviewId").value;
+  const status = document.getElementById("orderReviewStatus").value;
+  const remarks = document.getElementById("orderReviewRemarks").value.trim();
+  const res = await apiFetch("orders.php", {
+    method: "PUT",
+    body: JSON.stringify({ id, status, admin_remarks: remarks }),
   });
   if (res && res.success) {
     closeOrderReviewModal();
     renderOrdersTable();
     showToast(`Order ${id} updated to "${status}"`);
   } else {
-    showToast('Failed to update order');
+    showToast("Failed to update order");
   }
 }
 
 async function updateOrderStatus(id, status) {
-  const res = await apiFetch('orders.php', { method: 'PUT', body: JSON.stringify({ id, status }) });
+  const res = await apiFetch("orders.php", {
+    method: "PUT",
+    body: JSON.stringify({ id, status }),
+  });
   if (res && res.success) showToast(`Order ${id} marked as ${status}`);
-  else showToast('Failed to update order status');
+  else showToast("Failed to update order status");
 }
 
 // ---- USERS MGT ----
@@ -296,7 +369,7 @@ async function deleteUser(username) {
     return;
   }
   if (!confirm(`Are you sure you want to delete user '${username}'?`)) return;
-  
+
   await deleteUserApi(username);
   renderUsersTable();
   renderDashboard();
@@ -316,17 +389,17 @@ function closeUserModal() {
 
 async function saveAdminUser(e) {
   e.preventDefault();
-  
-  const res = await apiFetch('auth.php', {
-    method: 'POST',
+
+  const res = await apiFetch("auth.php", {
+    method: "POST",
     body: JSON.stringify({
-      action: 'register',
+      action: "register",
       username: document.getElementById("uUsername").value.trim(),
       email: document.getElementById("uEmail").value.trim(),
       name: document.getElementById("uName").value.trim(),
       password: document.getElementById("uPassword").value,
-      role: 'admin'
-    })
+      role: "admin",
+    }),
   });
 
   if (res && res.success) {
@@ -346,12 +419,12 @@ async function renderInquiriesTable() {
   const inquiries = await getInquiries();
   const tbody = document.getElementById("inquiriesTableBody");
   if (!tbody) return;
-  
+
   if (inquiries.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-light);">No inquiries yet.</td></tr>`;
     return;
   }
-  
+
   tbody.innerHTML = inquiries
     .map(
       (iq) => `
@@ -361,7 +434,114 @@ async function renderInquiriesTable() {
       <td>${iq.contact}</td>
       <td style="max-width:300px; font-size:0.85rem;">${iq.message}</td>
     </tr>
-  `
+  `,
     )
     .join("");
 }
+
+async function checkAdminNotifications() {
+  // 1. Orders Notification
+  try {
+    const res = await apiFetch("orders.php");
+    const orders = res && res.orders ? res.orders : [];
+    if (orders.length > 0) {
+      const maxOrderId = Math.max(
+        ...orders.map((o) => parseInt(o.id.replace(/\D/g, "")) || 0),
+      );
+      const lastViewed =
+        parseInt(localStorage.getItem("admin_last_viewed_order_id")) || 0;
+      if (!localStorage.getItem("admin_last_viewed_order_id")) {
+        localStorage.setItem("admin_last_viewed_order_id", maxOrderId);
+      } else if (maxOrderId > lastViewed) {
+        const activeTab = document.querySelector(".admin-tab.active")?.id;
+        if (activeTab !== "tab-orders") {
+          const badge = document.getElementById("badge-orders");
+          if (badge) badge.style.display = "block";
+        }
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  // 2. Inquiries Notification
+  try {
+    const inquiries = await getInquiries();
+    if (inquiries.length > 0) {
+      const maxInquiryId = Math.max(
+        ...inquiries.map((i) => parseInt(i.id) || 0),
+      );
+      const lastViewed =
+        parseInt(localStorage.getItem("admin_last_viewed_inquiry_id")) || 0;
+      if (!localStorage.getItem("admin_last_viewed_inquiry_id")) {
+        localStorage.setItem("admin_last_viewed_inquiry_id", maxInquiryId);
+      } else if (maxInquiryId > lastViewed) {
+        const activeTab = document.querySelector(".admin-tab.active")?.id;
+        if (activeTab !== "tab-inquiries") {
+          const badge = document.getElementById("badge-inquiries");
+          if (badge) badge.style.display = "block";
+        }
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  // 3. Users Notification
+  try {
+    const users = await getUsers();
+    if (users.length > 0) {
+      const maxUserId = Math.max(...users.map((u) => parseInt(u.id) || 0));
+      const lastViewed =
+        parseInt(localStorage.getItem("admin_last_viewed_user_id")) || 0;
+      if (!localStorage.getItem("admin_last_viewed_user_id")) {
+        localStorage.setItem("admin_last_viewed_user_id", maxUserId);
+      } else if (maxUserId > lastViewed) {
+        const activeTab = document.querySelector(".admin-tab.active")?.id;
+        if (activeTab !== "tab-users") {
+          const badge = document.getElementById("badge-users");
+          if (badge) badge.style.display = "block";
+        }
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// Start notification polling every 10 seconds
+checkAdminNotifications();
+setInterval(checkAdminNotifications, 10000);
+
+// ---- NOTIFICATION FEATURE ----
+function updateAdminNotifications() {
+  fetch("api/notifications.php")
+    .then((response) => response.json())
+    .then((data) => {
+      const ordersTab = document.querySelector(".nav-orders");
+      const inquiriesTab = document.querySelector(".nav-inquiries");
+      const usersTab = document.querySelector(".nav-users");
+
+      if (data.newOrders > 0) {
+        ordersTab.classList.add("has-notification");
+      } else {
+        ordersTab.classList.remove("has-notification");
+      }
+
+      if (data.newInquiries > 0) {
+        inquiriesTab.classList.add("has-notification");
+      } else {
+        inquiriesTab.classList.remove("has-notification");
+      }
+
+      if (data.newUsers > 0) {
+        usersTab.classList.add("has-notification");
+      } else {
+        usersTab.classList.remove("has-notification");
+      }
+    })
+    .catch((error) => console.error("Error fetching notifications:", error));
+}
+
+// Call the function periodically
+setInterval(updateAdminNotifications, 60000); // Check every 60 seconds

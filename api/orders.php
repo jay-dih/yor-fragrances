@@ -2,6 +2,17 @@
 require 'db.php';
 header('Content-Type: application/json');
 
+// Dynamic DB Schema Update: Ensure the `address` column exists in the `orders` table
+try {
+    $pdo->query("SELECT address FROM orders LIMIT 1");
+} catch (PDOException $e) {
+    try {
+        $pdo->query("ALTER TABLE orders ADD COLUMN address TEXT DEFAULT NULL");
+    } catch (PDOException $ex) {
+        // Handle gracefully
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
@@ -21,6 +32,7 @@ if ($method === 'GET') {
         $total   = $_POST['total']   ?? 0;
         $payment = $_POST['payment_method'] ?? 'GCash';
         $date    = $_POST['date']    ?? date('Y-m-d');
+        $address = $_POST['address'] ?? null;
         // Read user_id FROM THE POST BODY (sent by frontend from localStorage)
         $user_id = !empty($_POST['user_id']) ? intval($_POST['user_id']) : null;
 
@@ -35,10 +47,10 @@ if ($method === 'GET') {
         }
 
         $stmt = $pdo->prepare(
-            "INSERT INTO orders (id, user_id, customer_name, items_summary, total, payment_method, payment_receipt, status, order_date)
-             VALUES (?,?,?,?,?,?,?,'Pending',?)"
+            "INSERT INTO orders (id, user_id, customer_name, items_summary, total, payment_method, payment_receipt, address, status, order_date)
+             VALUES (?,?,?,?,?,?,?,?,'Pending',?)"
         );
-        $success = $stmt->execute([$id, $user_id, $customer, $items, $total, $payment, $receiptPath, $date]);
+        $success = $stmt->execute([$id, $user_id, $customer, $items, $total, $payment, $receiptPath, $address, $date]);
         echo json_encode(["success" => (bool)$success]);
 
     } else {
@@ -50,8 +62,8 @@ if ($method === 'GET') {
         $user_id = !empty($data['user_id']) ? intval($data['user_id']) : null;
 
         $stmt = $pdo->prepare(
-            "INSERT INTO orders (id, user_id, customer_name, items_summary, total, payment_method, status, order_date)
-             VALUES (?,?,?,?,?,?,'Pending',?)"
+            "INSERT INTO orders (id, user_id, customer_name, items_summary, total, payment_method, address, status, order_date)
+             VALUES (?,?,?,?,?,?,?,'Pending',?)"
         );
         $success = $stmt->execute([
             $data['id'],
@@ -60,6 +72,7 @@ if ($method === 'GET') {
             $data['items'],
             $data['total'],
             $data['payment_method'] ?? 'COD',
+            $data['address'] ?? null,
             $data['date']
         ]);
         echo json_encode(["success" => (bool)$success]);

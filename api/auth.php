@@ -34,6 +34,12 @@ if ($method === 'POST') {
         $role = isset($data['role']) ? $data['role'] : 'user'; // Admin can send role
         $registered = date('Y-m-d');
 
+        // Validate email format (e.g. must contain @ and a valid domain format)
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+            echo json_encode(["error" => "Please enter a valid email address (e.g. name@gmail.com)"]);
+            exit;
+        }
+
         // Check if exists
         $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
         $stmt->execute([$username, $email]);
